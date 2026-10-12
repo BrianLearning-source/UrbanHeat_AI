@@ -149,9 +149,10 @@ class _HeroOutlookCard extends StatelessWidget {
           const SizedBox(height: AppSpacing.md),
           // Illustration placeholder representing spatial nodes
           const SizedBox(height: AppSpacing.md),
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.baseline,
-            textBaseline: TextBaseline.alphabetic,
+          Wrap(
+            spacing: AppSpacing.sm,
+            runSpacing: AppSpacing.xs,
+            crossAxisAlignment: WrapCrossAlignment.center,
             children: [
               Text(
                 '~33.4°C',
@@ -197,17 +198,14 @@ class _SurfaceHeatIntensityCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                'SURFACE HEAT INTENSITY INDEX',
-                style: AppTextStyles.caption.copyWith(
-                  fontWeight: FontWeight.w700,
-                  color: AppColors.primary,
-                ),
-              ),
-            ],
+          Text(
+            'SURFACE HEAT INTENSITY INDEX',
+            style: AppTextStyles.caption.copyWith(
+              fontWeight: FontWeight.w700,
+              color: AppColors.primary,
+            ),
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
           ),
           const SizedBox(height: AppSpacing.md),
           const HeatSpectrumBar(),
@@ -262,9 +260,9 @@ class _LatestObservationCard extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Row(
+                  Expanded(
+                    child: Row(
                     children: [
                       Container(
                         width: AppSpacing.xl,
@@ -280,21 +278,25 @@ class _LatestObservationCard extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(width: AppSpacing.sm),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                          ),
-                          Text(
-                            'Satellite LST Prediction',
-                            style: AppTextStyles.caption.copyWith(
-                              color: AppColors.textSecondary,
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Satellite LST Prediction',
+                              style: AppTextStyles.caption.copyWith(
+                                color: AppColors.textSecondary,
+                              ),
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
                     ],
+                    ),
                   ),
+                  const SizedBox(width: AppSpacing.xs),
                   Text(
                     'Confidence:\n94%',
                     textAlign: TextAlign.end,
@@ -360,24 +362,30 @@ class _LatestObservationCard extends StatelessWidget {
               ),
               const SizedBox(height: AppSpacing.md),
               Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Row(
-                    children: [
-                      const Icon(
-                        Icons.location_on_outlined,
-                        size: AppSpacing.md,
-                        color: AppColors.primary,
-                      ),
-                      const SizedBox(width: AppSpacing.xs),
-                      Text(
-                        'Kota Malang Study Area',
-                        style: AppTextStyles.body.copyWith(
-                          fontWeight: FontWeight.w600,
+                  Expanded(
+                    child: Row(
+                      children: [
+                        const Icon(
+                          Icons.location_on_outlined,
+                          size: AppSpacing.md,
+                          color: AppColors.primary,
                         ),
-                      ),
-                    ],
+                        const SizedBox(width: AppSpacing.xs),
+                        Expanded(
+                          child: Text(
+                            'Kota Malang Study Area',
+                            style: AppTextStyles.body.copyWith(
+                              fontWeight: FontWeight.w600,
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                            maxLines: 1,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
+                  const SizedBox(width: AppSpacing.xs),
                   Text(
                     'City-wide Grid',
                     style: AppTextStyles.caption.copyWith(
