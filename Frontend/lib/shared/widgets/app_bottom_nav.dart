@@ -34,37 +34,45 @@ class AppBottomNav extends StatelessWidget {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
-              _NavItem(
-                index: 0,
-                label: 'Home',
-                icon: Icons.home_outlined,
-                activeIcon: Icons.home_rounded,
-                isSelected: currentIndex == 0,
-                onTap: () => onTap(0),
+              Expanded(
+                child: _NavItem(
+                  index: 0,
+                  label: 'Home',
+                  icon: Icons.home_outlined,
+                  activeIcon: Icons.home_rounded,
+                  isSelected: currentIndex == 0,
+                  onTap: () => onTap(0),
+                ),
               ),
-              _NavItem(
-                index: 1,
-                label: 'Heatmap',
-                icon: Icons.map_outlined,
-                activeIcon: Icons.map_rounded,
-                isSelected: currentIndex == 1,
-                onTap: () => onTap(1),
+              Expanded(
+                child: _NavItem(
+                  index: 1,
+                  label: 'Heatmap',
+                  icon: Icons.map_outlined,
+                  activeIcon: Icons.map_rounded,
+                  isSelected: currentIndex == 1,
+                  onTap: () => onTap(1),
+                ),
               ),
-              _NavItem(
-                index: 2,
-                label: 'Hotspots',
-                icon: Icons.local_fire_department_outlined,
-                activeIcon: Icons.warning_rounded,
-                isSelected: currentIndex == 2,
-                onTap: () => onTap(2),
+              Expanded(
+                child: _NavItem(
+                  index: 2,
+                  label: 'Hotspots',
+                  icon: Icons.local_fire_department_outlined,
+                  activeIcon: Icons.warning_rounded,
+                  isSelected: currentIndex == 2,
+                  onTap: () => onTap(2),
+                ),
               ),
-              _NavItem(
-                index: 3,
-                label: 'Profile',
-                icon: Icons.person_outline_rounded,
-                activeIcon: Icons.person_rounded,
-                isSelected: currentIndex == 3,
-                onTap: () => onTap(3),
+              Expanded(
+                child: _NavItem(
+                  index: 3,
+                  label: 'Profile',
+                  icon: Icons.person_outline_rounded,
+                  activeIcon: Icons.person_rounded,
+                  isSelected: currentIndex == 3,
+                  onTap: () => onTap(3),
+                ),
               ),
             ],
           ),
@@ -100,7 +108,7 @@ class _NavItem extends StatelessWidget {
       borderRadius: AppSpacing.roundedSm,
       child: Padding(
         padding: const EdgeInsets.symmetric(
-          horizontal: AppSpacing.md,
+          horizontal: AppSpacing.xs,
           vertical: AppSpacing.xs,
         ),
         child: Column(
@@ -113,6 +121,9 @@ class _NavItem extends StatelessWidget {
             ),
             Text(
               label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              softWrap: false,
               style: AppTextStyles.caption.copyWith(
                 color: color,
                 fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,

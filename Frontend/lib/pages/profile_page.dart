@@ -208,7 +208,7 @@ class _AboutUrbanHeatSection extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         SectionTitle(
-          title: 'ABOUT URBANHEAT AI',
+          title: 'About the Project',
           action: Text(
             'PBL ML Study',
             style: AppTextStyles.caption.copyWith(

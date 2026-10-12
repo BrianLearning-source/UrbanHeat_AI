@@ -199,9 +199,10 @@ class _MitigationStatsRow extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: AppSpacing.xs),
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.baseline,
-                  textBaseline: TextBaseline.alphabetic,
+                Wrap(
+                  spacing: AppSpacing.xs,
+                  runSpacing: AppSpacing.xs,
+                  crossAxisAlignment: WrapCrossAlignment.center,
                   children: [
                     Text(
                       '5',
@@ -212,14 +213,13 @@ class _MitigationStatsRow extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(width: AppSpacing.xs),
-                    Expanded(
-                      child: Text(
-                        'Districts (Kota Malang)',
-                        style: AppTextStyles.caption.copyWith(
-                          color: AppColors.primary,
-                        ),
-                        overflow: TextOverflow.ellipsis,
+                    Text(
+                      'Districts (Kota Malang)',
+                      style: AppTextStyles.caption.copyWith(
+                        color: AppColors.primary,
                       ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ],
                 ),
@@ -241,9 +241,10 @@ class _MitigationStatsRow extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: AppSpacing.xs),
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.baseline,
-                  textBaseline: TextBaseline.alphabetic,
+                Wrap(
+                  spacing: AppSpacing.xs,
+                  runSpacing: AppSpacing.xs,
+                  crossAxisAlignment: WrapCrossAlignment.center,
                   children: [
                     Text(
                       '-1.0° to\n-1.8°C',
