@@ -1,23 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+
 import '../app/theme/app_colors.dart';
 import '../app/theme/app_spacing.dart';
 import '../app/theme/app_text_styles.dart';
-import '../shared/widgets/app_top_bar.dart';
-import '../shared/widgets/buttons.dart';
-import '../shared/widgets/heat_spectrum_bar.dart';
 import '../shared/widgets/info_card.dart';
-import '../shared/widgets/metric_tile.dart';
-import '../shared/widgets/pill_badge.dart';
 import '../shared/widgets/section_title.dart';
+import 'auth_widgets.dart';
 
 class AreaDetailPage extends StatelessWidget {
-  final String gridId;
+  const AreaDetailPage({super.key, required this.gridId});
 
-  const AreaDetailPage({
-    super.key,
-    required this.gridId,
-  });
+  final String gridId;
 
   @override
   Widget build(BuildContext context) {
@@ -26,44 +20,31 @@ class AreaDetailPage extends StatelessWidget {
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.only(bottom: AppSpacing.xl),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              const AppTopBar(),
-              Padding(
-                padding: AppSpacing.screenPaddingH,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    const SizedBox(height: AppSpacing.xs),
-                    _buildHeader(context),
-                    const SizedBox(height: AppSpacing.md),
-                    _AreaDetailHeroCard(gridId: gridId),
-                    const SizedBox(height: AppSpacing.lg),
-                    const _AreaDetailSpectrumSection(),
-                    const SizedBox(height: AppSpacing.lg),
-                    const _AreaDetailIndicatorsSection(),
-                    const SizedBox(height: AppSpacing.lg),
-                    _AreaDetailModelInfoCard(
-                      onTap: () => context.go('/hotspots/area/$gridId/factors'),
-                    ),
-                    const SizedBox(height: AppSpacing.lg),
-                    GradientButton(
-                      label: 'View Suggested Mitigation Measures →',
-                      onPressed: () => context.go('/hotspots/area/$gridId/mitigation'),
-                    ),
-                    const SizedBox(height: AppSpacing.xs),
-                    Text(
-                      'Targeted urban cooling & greening strategies for this cell',
-                      textAlign: TextAlign.center,
-                      style: AppTextStyles.caption.copyWith(
-                        color: AppColors.textSecondary,
-                      ),
-                    ),
-                  ],
+          child: Padding(
+            padding: AppSpacing.screenPaddingH,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                const SizedBox(height: AppSpacing.md),
+                _buildHeader(context),
+                const SizedBox(height: AppSpacing.lg),
+                _AreaDetailHeroCard(gridId: gridId),
+                const SizedBox(height: AppSpacing.lg),
+                const _AreaDetailSpectrumSection(),
+                const SizedBox(height: AppSpacing.lg),
+                const _AreaDetailIndicatorsSection(),
+                const SizedBox(height: AppSpacing.lg),
+                _AreaDetailModelInfoSection(
+                  onTap: () => context.go('/hotspots/area/$gridId/factors'),
                 ),
-              ),
-            ],
+                const SizedBox(height: AppSpacing.lg),
+                AuthPrimaryButton(
+                  label: 'View Suggested Mitigation Measures',
+                  onPressed: () =>
+                      context.go('/hotspots/area/$gridId/mitigation'),
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -74,10 +55,12 @@ class AreaDetailPage extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            InkWell(
+        Align(
+          alignment: Alignment.centerLeft,
+          child: Material(
+            color: AppColors.surface,
+            borderRadius: AppSpacing.roundedSm,
+            child: InkWell(
               onTap: () {
                 if (context.canPop()) {
                   context.pop();
@@ -86,28 +69,21 @@ class AreaDetailPage extends StatelessWidget {
                 }
               },
               borderRadius: AppSpacing.roundedSm,
-              child: const Padding(
-                padding: EdgeInsets.all(AppSpacing.xs),
-                child: Icon(
-                  Icons.arrow_back_rounded,
-                  color: AppColors.primary,
-                  size: AppSpacing.lg,
-                ),
+              child: const SizedBox(
+                width: AppSpacing.xl + AppSpacing.xs,
+                height: AppSpacing.xl + AppSpacing.xs,
+                child: Icon(Icons.arrow_back_rounded, color: AppColors.primary),
               ),
             ),
-          ],
+          ),
         ),
         const SizedBox(height: AppSpacing.sm),
-        Text(
-          'Area Detail',
-          style: AppTextStyles.pageTitle,
-        ),
+        Text('Area Detail', style: AppTextStyles.pageTitle),
         const SizedBox(height: AppSpacing.xs),
         Text(
-          'Spatio-temporal satellite analysis for selected grid in Kota Malang',
-          style: AppTextStyles.caption.copyWith(
-            color: AppColors.textSecondary,
-          ),
+          'Satellite analysis for the selected grid.',
+          style: AppTextStyles.body.copyWith(color: AppColors.textSecondary),
+          maxLines: 1,
         ),
       ],
     );
@@ -115,185 +91,114 @@ class AreaDetailPage extends StatelessWidget {
 }
 
 class _AreaDetailHeroCard extends StatelessWidget {
-  final String gridId;
-
   const _AreaDetailHeroCard({required this.gridId});
+
+  final String gridId;
 
   @override
   Widget build(BuildContext context) {
     return InfoCard(
       backgroundColor: AppColors.primary,
       borderColor: AppColors.primaryLight,
-      gradient: const LinearGradient(
-        colors: [
-          AppColors.primary,
-          AppColors.primaryLight,
-        ],
-        begin: Alignment.topLeft,
-        end: Alignment.bottomRight,
-      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
+              const Icon(
+                Icons.location_on_rounded,
+                color: AppColors.accent,
+                size: AppSpacing.md,
+              ),
+              const SizedBox(width: AppSpacing.xs),
               Expanded(
-                child: Row(
-                  children: [
-                    const Icon(
-                      Icons.location_on_rounded,
-                      color: AppColors.accent,
-                      size: AppSpacing.md,
-                    ),
-                    const SizedBox(width: AppSpacing.xs),
-                    Expanded(
-                      child: Text(
-                        'GRID #$gridId • CENTRAL',
-                        style: AppTextStyles.caption.copyWith(
-                          color: AppColors.surface,
-                          fontWeight: FontWeight.w600,
-                        ),
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                  ],
+                child: Text(
+                  'Grid #$gridId · Central',
+                  style: AppTextStyles.caption.copyWith(
+                    color: AppColors.surface,
+                    fontWeight: FontWeight.w600,
+                  ),
+                  maxLines: 1,
                 ),
               ),
             ],
           ),
           const SizedBox(height: AppSpacing.md),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            crossAxisAlignment: CrossAxisAlignment.baseline,
-            textBaseline: TextBaseline.alphabetic,
-            children: [
-              Text(
-                '~34.8 °C',
-                style: AppTextStyles.tabular(
-                  fontSize: 32,
-                  fontWeight: FontWeight.w700,
-                  color: AppColors.surface,
-                ),
-              ),
-              const SizedBox(width: AppSpacing.xs),
-              Flexible(
-                child: Text(
-                  '-7.9784° S, 112.6312° E',
-                  style: AppTextStyles.tabular(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w500,
-                    color: AppColors.surface.withValues(alpha: 0.7),
-                  ),
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-            ],
+          Text(
+            '~34.8°C',
+            style: AppTextStyles.display.copyWith(color: AppColors.surface),
           ),
           const SizedBox(height: AppSpacing.xs),
           Text(
-            'Target: Predicted Land Surface Temp (LST)',
+            'Predicted Land Surface Temp (LST)',
             style: AppTextStyles.caption.copyWith(
-              color: AppColors.surface.withValues(alpha: 0.7),
+              color: AppColors.surface.withValues(alpha: 0.72),
             ),
           ),
           const SizedBox(height: AppSpacing.md),
           Row(
             children: [
-              Expanded(
-                child: Container(
-                  padding: const EdgeInsets.all(AppSpacing.sm),
-                  decoration: BoxDecoration(
-                    color: AppColors.surface.withValues(alpha: 0.08),
-                    borderRadius: AppSpacing.roundedSm,
-                    border: Border.all(
-                      color: AppColors.surface.withValues(alpha: 0.15),
-                      width: 1,
-                    ),
-                  ),
-                  child: Row(
-                    children: [
-                      const Icon(
-                        Icons.satellite_alt_rounded,
-                        color: AppColors.accent,
-                        size: AppSpacing.lg,
-                      ),
-                      const SizedBox(width: AppSpacing.xs),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'SATELLITE PASS',
-                              style: AppTextStyles.caption.copyWith(
-                                color: AppColors.surface.withValues(alpha: 0.7),
-                                fontSize: 10,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                            Text(
-                              'Sentinel-2 / Landsat',
-                              style: AppTextStyles.caption.copyWith(
-                                color: AppColors.surface,
-                                fontWeight: FontWeight.w600,
-                              ),
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
+              const Expanded(
+                child: _HeroMetric(
+                  icon: Icons.satellite_alt_rounded,
+                  caption: 'Satellite pass',
+                  value: 'Sentinel-2',
                 ),
               ),
-              const SizedBox(width: AppSpacing.xs),
-              Expanded(
-                child: Container(
-                  padding: const EdgeInsets.all(AppSpacing.sm),
-                  decoration: BoxDecoration(
-                    color: AppColors.surface.withValues(alpha: 0.08),
-                    borderRadius: AppSpacing.roundedSm,
-                    border: Border.all(
-                      color: AppColors.surface.withValues(alpha: 0.15),
-                      width: 1,
-                    ),
-                  ),
-                  child: Row(
-                    children: [
-                      const Icon(
-                        Icons.trending_up_rounded,
-                        color: AppColors.mitigation,
-                        size: AppSpacing.lg,
-                      ),
-                      const SizedBox(width: AppSpacing.xs),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'LST ANOMALY',
-                              style: AppTextStyles.caption.copyWith(
-                                color: AppColors.surface.withValues(alpha: 0.7),
-                                fontSize: 10,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                            Text(
-                              '+3.8°C vs Baseline',
-                              style: AppTextStyles.caption.copyWith(
-                                color: AppColors.surface,
-                                fontWeight: FontWeight.w600,
-                              ),
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
+              const SizedBox(width: AppSpacing.sm),
+              const Expanded(
+                child: _HeroMetric(
+                  icon: Icons.trending_up_rounded,
+                  caption: 'vs baseline',
+                  value: '+3.8°C',
                 ),
               ),
             ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _HeroMetric extends StatelessWidget {
+  const _HeroMetric({
+    required this.icon,
+    required this.caption,
+    required this.value,
+  });
+
+  final IconData icon;
+  final String caption;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: AppSpacing.cardPaddingAll,
+      decoration: BoxDecoration(
+        color: AppColors.surface.withValues(alpha: 0.08),
+        borderRadius: AppSpacing.roundedSm,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(icon, color: AppColors.surface, size: AppSpacing.md),
+          const SizedBox(height: AppSpacing.xs),
+          Text(
+            caption,
+            style: AppTextStyles.caption.copyWith(
+              color: AppColors.surface.withValues(alpha: 0.72),
+            ),
+            maxLines: 1,
+          ),
+          Text(
+            value,
+            style: AppTextStyles.body.copyWith(
+              color: AppColors.surface,
+              fontWeight: FontWeight.w600,
+            ),
+            maxLines: 1,
           ),
         ],
       ),
@@ -309,33 +214,96 @@ class _AreaDetailSpectrumSection extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        const SectionTitle(
-          title: 'Heat Intensity Spectrum',
-          action: PillBadge(
-            label: 'Continuous Range',
-            color: AppColors.primaryLight,
+        const SectionTitle(title: 'Heat Intensity Spectrum'),
+        const SizedBox(height: AppSpacing.xs),
+        const InfoCard(child: _SpectrumContent()),
+      ],
+    );
+  }
+}
+
+class _SpectrumContent extends StatelessWidget {
+  const _SpectrumContent();
+
+  static const double _markerPosition = 0.77;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Align(
+          alignment: const Alignment(-1 + _markerPosition * 2, 0),
+          child: Container(
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppSpacing.sm,
+              vertical: AppSpacing.xs,
+            ),
+            decoration: const BoxDecoration(
+              color: AppColors.primary,
+              borderRadius: AppSpacing.roundedFull,
+            ),
+            child: Text(
+              'Predicted: ~34.8°C',
+              style: AppTextStyles.caption.copyWith(color: AppColors.surface),
+              maxLines: 1,
+            ),
           ),
         ),
         const SizedBox(height: AppSpacing.xs),
-        const InfoCard(
-          child: HeatSpectrumBar(
-            markerText: 'Predicted: ~34.8°C',
-            markerPosition: 0.76,
-            customLegend: [
-              HeatSpectrumLegendItem(
-                label: 'Lower LST\n<28°C',
-                color: AppColors.heatLow,
-              ),
-              HeatSpectrumLegendItem(
-                label: 'Moderate\n28–32°C',
-                color: AppColors.heatMedium,
-              ),
-              HeatSpectrumLegendItem(
-                label: 'Higher LST\n>36°C',
-                color: AppColors.heatHigh,
-              ),
-            ],
+        Container(
+          height: AppSpacing.xs,
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                AppColors.heatLow,
+                AppColors.heatMedium,
+                AppColors.accent,
+                AppColors.heatHigh,
+              ],
+            ),
+            borderRadius: AppSpacing.roundedFull,
           ),
+        ),
+        const SizedBox(height: AppSpacing.md),
+        const Row(
+          children: [
+            Expanded(
+              child: _SpectrumLegend(label: 'Lower', range: '<28°C'),
+            ),
+            Expanded(
+              child: _SpectrumLegend(label: 'Moderate', range: '28-32°C'),
+            ),
+            Expanded(
+              child: _SpectrumLegend(label: 'Higher', range: '>36°C'),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+}
+
+class _SpectrumLegend extends StatelessWidget {
+  const _SpectrumLegend({required this.label, required this.range});
+
+  final String label;
+  final String range;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: AppTextStyles.caption.copyWith(color: AppColors.textSecondary),
+          maxLines: 1,
+        ),
+        Text(
+          range,
+          style: AppTextStyles.caption.copyWith(color: AppColors.textSecondary),
+          maxLines: 1,
         ),
       ],
     );
@@ -350,44 +318,37 @@ class _AreaDetailIndicatorsSection extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        const SectionTitle(
-          title: 'Environmental Indicators',
-          action: PillBadge(
-            label: 'Spectral Features',
-            color: AppColors.primaryLight,
-          ),
-        ),
+        const SectionTitle(title: 'Environmental Indicators'),
         const SizedBox(height: AppSpacing.xs),
-        InfoCard(
-          padding: AppSpacing.cardPaddingAll,
+        const InfoCard(
+          padding: EdgeInsets.zero,
           child: Column(
             children: [
-              MetricTile(
+              _IndicatorRow(
                 icon: Icons.eco_rounded,
-                label: 'NDVI (Vegetation Index)',
-                subtitle: 'Low green canopy coverage',
+                title: 'NDVI',
+                subtitle: 'Vegetation index',
                 value: '0.19',
               ),
-              const SizedBox(height: AppSpacing.xs),
-              MetricTile(
+              _InsetDivider(),
+              _IndicatorRow(
                 icon: Icons.apartment_rounded,
-                label: 'NDBI (Built-up Indicator)',
-                subtitle: 'Dense impervious structures',
+                title: 'NDBI',
+                subtitle: 'Built-up index',
                 value: '0.74',
               ),
-              const SizedBox(height: AppSpacing.xs),
-              MetricTile(
+              _InsetDivider(),
+              _IndicatorRow(
                 icon: Icons.layers_rounded,
-                label: 'Land Cover',
-                subtitle: 'Satellite taxonomy',
-                value: 'Urban Commercial',
-                valueSubtitle: 'High Density',
+                title: 'Land cover',
+                subtitle: 'High density area',
+                value: 'Urban',
               ),
-              const SizedBox(height: AppSpacing.xs),
-              MetricTile(
+              _InsetDivider(),
+              _IndicatorRow(
                 icon: Icons.alt_route_rounded,
-                label: 'Road / Impervious',
-                subtitle: 'Low permeability profile',
+                title: 'Impervious',
+                subtitle: 'Road surface',
                 value: '72%',
                 valueColor: AppColors.accent,
               ),
@@ -399,79 +360,75 @@ class _AreaDetailIndicatorsSection extends StatelessWidget {
   }
 }
 
-class _AreaDetailModelInfoCard extends StatelessWidget {
-  final VoidCallback onTap;
+class _IndicatorRow extends StatelessWidget {
+  const _IndicatorRow({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    required this.value,
+    this.valueColor = AppColors.primary,
+  });
 
-  const _AreaDetailModelInfoCard({required this.onTap});
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final String value;
+  final Color valueColor;
 
   @override
   Widget build(BuildContext context) {
-    return InfoCard(
-      onTap: onTap,
-      padding: AppSpacing.cardPaddingAll,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
+    return Padding(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.md,
+        vertical: AppSpacing.sm,
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Expanded(
-                child: Row(
-                  children: [
-                    Container(
-                      width: AppSpacing.xl,
-                      height: AppSpacing.xl,
-                      decoration: BoxDecoration(
-                        color: AppColors.primary.withValues(alpha: 0.08),
-                        borderRadius: AppSpacing.roundedSm,
-                      ),
-                      child: const Icon(
-                        Icons.memory_rounded,
-                        color: AppColors.primary,
-                        size: AppSpacing.md,
-                      ),
-                    ),
-                    const SizedBox(width: AppSpacing.xs),
-                    Expanded(
-                      child: Text(
-                        'Prediction & Model Info',
-                        style: AppTextStyles.bodyLarge.copyWith(
-                          fontWeight: FontWeight.w600,
-                        ),
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(width: AppSpacing.xs),
-              const PillBadge(
-                label: 'LST-XGBoost',
-                color: AppColors.primaryLight,
-              ),
-            ],
+          Container(
+            width: AppSpacing.xl + AppSpacing.xs,
+            height: AppSpacing.xl + AppSpacing.xs,
+            decoration: BoxDecoration(
+              color: AppColors.background,
+              borderRadius: AppSpacing.roundedSm,
+            ),
+            child: Icon(icon, color: AppColors.primary, size: AppSpacing.md),
           ),
-          const SizedBox(height: AppSpacing.md),
-          _ModelInfoRow(label: 'Target Variable', value: 'Land Surface Temp (LST)'),
-          const SizedBox(height: AppSpacing.xs),
-          _ModelInfoRow(label: 'Approach', value: 'Supervised Reg (MAE, R²)'),
-          const SizedBox(height: AppSpacing.xs),
-          _ModelInfoRow(label: 'Observation', value: 'Sentinel-2 / Landsat'),
-          const SizedBox(height: AppSpacing.sm),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.end,
-            children: [
-              Flexible(
-                child: Text(
-                  'Tap to view feature impact (SHAP) →',
-                  style: AppTextStyles.caption.copyWith(
-                    color: AppColors.accent,
+          const SizedBox(width: AppSpacing.sm),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  title,
+                  style: AppTextStyles.body.copyWith(
                     fontWeight: FontWeight.w600,
                   ),
-                  overflow: TextOverflow.ellipsis,
+                  maxLines: 1,
                 ),
+                Text(
+                  subtitle,
+                  style: AppTextStyles.caption.copyWith(
+                    color: AppColors.textSecondary,
+                  ),
+                  maxLines: 1,
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: AppSpacing.sm),
+          SizedBox(
+            width: AppSpacing.xl * 2,
+            child: Text(
+              value,
+              style: AppTextStyles.body.copyWith(
+                fontWeight: FontWeight.w600,
+                color: valueColor,
               ),
-            ],
+              textAlign: TextAlign.end,
+              maxLines: 1,
+            ),
           ),
         ],
       ),
@@ -479,16 +436,75 @@ class _AreaDetailModelInfoCard extends StatelessWidget {
   }
 }
 
+class _InsetDivider extends StatelessWidget {
+  const _InsetDivider();
+
+  @override
+  Widget build(BuildContext context) {
+    return const Padding(
+      padding: EdgeInsets.only(
+        left: AppSpacing.md + AppSpacing.xl + AppSpacing.xs + AppSpacing.sm,
+        right: AppSpacing.md,
+      ),
+      child: Divider(height: 1, thickness: 1, color: AppColors.border),
+    );
+  }
+}
+
+class _AreaDetailModelInfoSection extends StatelessWidget {
+  const _AreaDetailModelInfoSection({required this.onTap});
+
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        const SectionTitle(title: 'Model info'),
+        const SizedBox(height: AppSpacing.xs),
+        InfoCard(
+          child: Column(
+            children: [
+              const _ModelInfoRow(label: 'Target', value: 'LST'),
+              const SizedBox(height: AppSpacing.sm),
+              const _ModelInfoRow(
+                label: 'Approach',
+                value: 'Supervised regression',
+              ),
+              const SizedBox(height: AppSpacing.sm),
+              const _ModelInfoRow(label: 'Data', value: 'Sentinel-2 / Landsat'),
+              const SizedBox(height: AppSpacing.md),
+              Align(
+                alignment: Alignment.centerRight,
+                child: InkWell(
+                  onTap: onTap,
+                  child: Text(
+                    'Tap to view feature impact (SHAP) →',
+                    style: AppTextStyles.caption.copyWith(
+                      color: AppColors.accent,
+                    ),
+                    maxLines: 1,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
 class _ModelInfoRow extends StatelessWidget {
+  const _ModelInfoRow({required this.label, required this.value});
+
   final String label;
   final String value;
-
-  const _ModelInfoRow({required this.label, required this.value});
 
   @override
   Widget build(BuildContext context) {
     return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Expanded(
           child: Text(
@@ -496,18 +512,17 @@ class _ModelInfoRow extends StatelessWidget {
             style: AppTextStyles.caption.copyWith(
               color: AppColors.textSecondary,
             ),
-            overflow: TextOverflow.ellipsis,
+            maxLines: 1,
           ),
         ),
-        const SizedBox(width: AppSpacing.xs),
-        Flexible(
+        const SizedBox(width: AppSpacing.sm),
+        Expanded(
+          flex: 2,
           child: Text(
             value,
-            style: AppTextStyles.body.copyWith(
-              fontWeight: FontWeight.w600,
-            ),
+            style: AppTextStyles.body.copyWith(fontWeight: FontWeight.w600),
             textAlign: TextAlign.end,
-            overflow: TextOverflow.ellipsis,
+            maxLines: 1,
           ),
         ),
       ],

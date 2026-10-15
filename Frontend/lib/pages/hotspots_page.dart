@@ -1,15 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+
 import '../app/theme/app_colors.dart';
 import '../app/theme/app_spacing.dart';
 import '../app/theme/app_text_styles.dart';
-import '../data/repositories/urban_heat_repository.dart';
 import '../data/models/urban_heat_models.dart';
+import '../data/repositories/urban_heat_repository.dart';
 import '../shared/widgets/app_top_bar.dart';
-import '../shared/widgets/buttons.dart';
 import '../shared/widgets/info_card.dart';
-import '../shared/widgets/pill_badge.dart';
-import '../shared/widgets/placeholder_image.dart';
 
 class HotspotsPage extends StatefulWidget {
   const HotspotsPage({super.key});
@@ -19,10 +17,9 @@ class HotspotsPage extends StatefulWidget {
 }
 
 class _HotspotsPageState extends State<HotspotsPage> {
-  // Indeks filter yang dipilih, disimpan sebagai state lokal halaman.
   int _selectedFilterIndex = 0;
   final List<String> _filters = const [
-    'All Kota Malang',
+    'All',
     'Lowokwaru',
     'Klojen',
     'Blimbing',
@@ -38,39 +35,50 @@ class _HotspotsPageState extends State<HotspotsPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              const AppTopBar(),
+              AppTopBar(onProfileTap: () => context.go('/profile')),
+              const SizedBox(height: AppSpacing.md),
               Padding(
                 padding: AppSpacing.screenPaddingH,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    const SizedBox(height: AppSpacing.xs),
-                    _buildHeader(context),
+                    _buildHeader(),
                     const SizedBox(height: AppSpacing.md),
                     _buildFilterChips(),
                     const SizedBox(height: AppSpacing.md),
                     const _HotspotsMapOverview(),
                     const SizedBox(height: AppSpacing.lg),
-                    // map mengubah setiap objek hotspot menjadi satu kartu UI.
-                    ...urbanHeatRepository.hotspots.map((item) => Padding(
-                          padding: const EdgeInsets.only(bottom: AppSpacing.md),
-                          child: _HotspotClusterCard(
-                            item: item,
-                            onInspect: () => context.go('/hotspots/area/${item.gridId}'),
-                          ),
-                        )),
-                    const SizedBox(height: AppSpacing.sm),
-                    GradientButton(
-                      label: 'Select on Heatmap to View Area Detail',
-                      icon: Icons.map_outlined,
-                      onPressed: () => context.go('/heatmap'),
+                    ...urbanHeatRepository.hotspots.map(
+                      (item) => Padding(
+                        padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+                        child: _HotspotClusterCard(
+                          item: item,
+                          onInspect: () =>
+                              context.go('/hotspots/area/${item.gridId}'),
+                        ),
+                      ),
                     ),
                     const SizedBox(height: AppSpacing.sm),
-                    Text(
-                      'UrbanHeat AI Research Team',
-                      textAlign: TextAlign.center,
-                      style: AppTextStyles.caption.copyWith(
-                        color: AppColors.textSecondary,
+                    SizedBox(
+                      height: AppSpacing.xl + AppSpacing.lg,
+                      child: ElevatedButton.icon(
+                        onPressed: () => context.go('/heatmap'),
+                        icon: const Icon(Icons.map_outlined),
+                        label: Text(
+                          'View on Heatmap',
+                          style: AppTextStyles.body.copyWith(
+                            color: AppColors.surface,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.accent,
+                          foregroundColor: AppColors.surface,
+                          elevation: 0,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: AppSpacing.roundedSm,
+                          ),
+                        ),
                       ),
                     ),
                   ],
@@ -83,54 +91,33 @@ class _HotspotsPageState extends State<HotspotsPage> {
     );
   }
 
-  Widget _buildHeader(BuildContext context) {
+  Widget _buildHeader() {
     return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        if (context.canPop())
-          Padding(
-            padding: const EdgeInsets.only(right: AppSpacing.xs),
-            child: InkWell(
-              onTap: () => context.pop(),
-              borderRadius: AppSpacing.roundedSm,
-              child: const Padding(
-                padding: EdgeInsets.all(AppSpacing.xs),
-                child: Icon(
-                  Icons.arrow_back_rounded,
-                  color: AppColors.primary,
-                  size: AppSpacing.lg,
-                ),
-              ),
-            ),
-          ),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                'Potential Hotspots',
-                style: AppTextStyles.pageTitle,
-              ),
+              Text('Potential Hotspots', style: AppTextStyles.pageTitle),
               const SizedBox(height: AppSpacing.xs),
               Text(
-                'Identified areas with higher predicted Land Surface Temperature across Kota Malang',
-                style: AppTextStyles.caption.copyWith(
+                'Areas with the highest predicted LST.',
+                style: AppTextStyles.body.copyWith(
                   color: AppColors.textSecondary,
                 ),
+                maxLines: 1,
               ),
             ],
           ),
         ),
+        const SizedBox(width: AppSpacing.xs),
         Container(
-          width: AppSpacing.xl,
-          height: AppSpacing.xl,
+          width: AppSpacing.xl + AppSpacing.xs,
+          height: AppSpacing.xl + AppSpacing.xs,
           decoration: BoxDecoration(
             color: AppColors.surface,
             borderRadius: AppSpacing.roundedSm,
-            border: Border.all(
-              color: AppColors.border,
-              width: 1,
-            ),
+            border: Border.all(color: AppColors.border),
           ),
           child: const Icon(
             Icons.tune_rounded,
@@ -142,7 +129,6 @@ class _HotspotsPageState extends State<HotspotsPage> {
     );
   }
 
-
   Widget _buildFilterChips() {
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
@@ -152,48 +138,26 @@ class _HotspotsPageState extends State<HotspotsPage> {
           return Padding(
             padding: const EdgeInsets.only(right: AppSpacing.xs),
             child: InkWell(
-              onTap: () {
-                // setState memberi tahu Flutter bahwa pilihan berubah dan UI perlu dibangun ulang.
-                setState(() {
-                  _selectedFilterIndex = index;
-                });
-              },
+              onTap: () => setState(() => _selectedFilterIndex = index),
               borderRadius: AppSpacing.roundedSm,
               child: Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: AppSpacing.md,
-                  vertical: AppSpacing.xs,
-                ),
+                height: AppSpacing.xl + AppSpacing.xs / 2,
+                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+                alignment: Alignment.center,
                 decoration: BoxDecoration(
                   color: isSelected ? AppColors.primary : AppColors.surface,
                   borderRadius: AppSpacing.roundedSm,
                   border: Border.all(
                     color: isSelected ? AppColors.primary : AppColors.border,
-                    width: 1,
                   ),
                 ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    if (isSelected) ...[
-                      Container(
-                        width: AppSpacing.xs,
-                        height: AppSpacing.xs,
-                        decoration: const BoxDecoration(
-                          color: AppColors.accent,
-                          shape: BoxShape.circle,
-                        ),
-                      ),
-                      const SizedBox(width: AppSpacing.xs),
-                    ],
-                    Text(
-                      _filters[index],
-                      style: AppTextStyles.caption.copyWith(
-                        color: isSelected ? AppColors.surface : AppColors.primary,
-                        fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
-                      ),
-                    ),
-                  ],
+                child: Text(
+                  _filters[index],
+                  style: AppTextStyles.body.copyWith(
+                    color: isSelected ? AppColors.surface : AppColors.primary,
+                    fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                  ),
+                  maxLines: 1,
                 ),
               ),
             ),
@@ -211,174 +175,89 @@ class _HotspotsMapOverview extends StatelessWidget {
   Widget build(BuildContext context) {
     return InfoCard(
       padding: EdgeInsets.zero,
-      child: Stack(
-        children: [
-          const PlaceholderImage(
-            height: 180,
-            icon: Icons.map_outlined,
-          ),
-          Positioned(
-            top: AppSpacing.sm,
-            left: AppSpacing.sm,
-            child: Container(
-              padding: const EdgeInsets.symmetric(
-                horizontal: AppSpacing.sm,
-                vertical: AppSpacing.xs,
-              ),
-              decoration: BoxDecoration(
-                color: AppColors.primary.withValues(alpha: 0.85),
-                borderRadius: AppSpacing.roundedFull,
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const SizedBox(width: AppSpacing.xs),
-                  Text(
-                    '3 HOTSPOT CLUSTERS DETECTED',
-                    style: AppTextStyles.caption.copyWith(
-                      color: AppColors.surface,
-                      fontWeight: FontWeight.w700,
-                      fontSize: 10,
-                    ),
+      child: ClipRRect(
+        borderRadius: AppSpacing.roundedMd,
+        child: SizedBox(
+          height: AppSpacing.xl * 4 + AppSpacing.md,
+          width: double.infinity,
+          child: ColoredBox(
+            color: AppColors.background,
+            child: Stack(
+              children: [
+                Positioned(
+                  top: AppSpacing.md,
+                  left: AppSpacing.md,
+                  child: Text(
+                    '3 hotspot clusters',
+                    style: AppTextStyles.caption,
                   ),
-                ],
-              ),
-            ),
-          ),
-          // Hotspot marker 1
-          Positioned(
-            left: 120,
-            top: 60,
-            child: _MapClusterMarker(
-              number: '1',
-              color: AppColors.heatHigh,
-              temp: '35.1°C',
-            ),
-          ),
-          // Hotspot marker 2
-          Positioned(
-            right: 80,
-            bottom: 40,
-            child: _MapClusterMarker(
-              number: '2',
-              color: AppColors.accent,
-              temp: '34.6°C',
-            ),
-          ),
-          // Hotspot marker 3
-          Positioned(
-            left: 60,
-            bottom: 50,
-            child: _MapClusterMarker(
-              number: '3',
-              color: AppColors.heatMedium,
-              temp: '34.2°C',
-            ),
-          ),
-          // Bottom overlay bar
-          Positioned(
-            bottom: AppSpacing.sm,
-            left: AppSpacing.sm,
-            right: AppSpacing.sm,
-            child: Container(
-              padding: const EdgeInsets.symmetric(
-                horizontal: AppSpacing.sm,
-                vertical: AppSpacing.xs,
-              ),
-              decoration: BoxDecoration(
-                color: AppColors.surface.withValues(alpha: 0.9),
-                borderRadius: AppSpacing.roundedSm,
-                border: Border.all(
-                  color: AppColors.border,
-                  width: 1,
                 ),
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Expanded(
-                    child: Text(
-                      'Kota Malang Spatial Scan Window',
-                      style: AppTextStyles.caption.copyWith(
-                        fontWeight: FontWeight.w600,
-                        fontSize: 10,
-                      ),
-                      overflow: TextOverflow.ellipsis,
-                    ),
+                const Align(
+                  alignment: Alignment(-0.2, 0.05),
+                  child: _MapClusterMarker(
+                    number: '1',
+                    color: AppColors.heatHigh,
+                    temp: '35.1°C',
                   ),
-                  const SizedBox(width: AppSpacing.xs),
-                  Text(
-                    'High LST Distribution',
-                    style: AppTextStyles.caption.copyWith(
-                      color: AppColors.heatHigh,
-                      fontWeight: FontWeight.w600,
-                      fontSize: 10,
-                    ),
+                ),
+                const Align(
+                  alignment: Alignment(0.65, 0.15),
+                  child: _MapClusterMarker(
+                    number: '2',
+                    color: AppColors.accent,
+                    temp: '34.6°C',
                   ),
-                ],
-              ),
+                ),
+                const Align(
+                  alignment: Alignment(-0.65, 0.58),
+                  child: _MapClusterMarker(
+                    number: '3',
+                    color: AppColors.heatMedium,
+                    temp: '34.2°C',
+                  ),
+                ),
+              ],
             ),
           ),
-        ],
+        ),
       ),
     );
   }
 }
 
 class _MapClusterMarker extends StatelessWidget {
-  final String number;
-  final Color color;
-  final String temp;
-
   const _MapClusterMarker({
     required this.number,
     required this.color,
     required this.temp,
   });
 
+  final String number;
+  final Color color;
+  final String temp;
+
   @override
   Widget build(BuildContext context) {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Container(
-          padding: const EdgeInsets.symmetric(
-            horizontal: AppSpacing.xs,
-            vertical: 2,
-          ),
-          decoration: BoxDecoration(
-            color: AppColors.primary,
-            borderRadius: AppSpacing.roundedSm,
-          ),
-          child: Text(
-            temp,
-            style: AppTextStyles.tabular(
-              fontSize: 10,
-              fontWeight: FontWeight.w600,
-              color: AppColors.surface,
-            ),
-          ),
+        Text(
+          temp,
+          style: AppTextStyles.caption.copyWith(color: AppColors.textSecondary),
+          maxLines: 1,
         ),
-        const SizedBox(height: 2),
         Container(
-          width: AppSpacing.lg,
-          height: AppSpacing.lg,
-          decoration: BoxDecoration(
-            color: color,
-            shape: BoxShape.circle,
-            border: Border.all(
-              color: AppColors.surface,
-              width: 2,
-            ),
-          ),
+          width: AppSpacing.lg + AppSpacing.xs / 2,
+          height: AppSpacing.lg + AppSpacing.xs / 2,
+          decoration: BoxDecoration(color: color, shape: BoxShape.circle),
           child: Center(
             child: Text(
               number,
               style: AppTextStyles.caption.copyWith(
                 color: AppColors.surface,
                 fontWeight: FontWeight.w700,
-                fontSize: 10,
               ),
+              maxLines: 1,
             ),
           ),
         ),
@@ -388,24 +267,39 @@ class _MapClusterMarker extends StatelessWidget {
 }
 
 class _HotspotClusterCard extends StatelessWidget {
+  const _HotspotClusterCard({required this.item, required this.onInspect});
+
   final HotspotItem item;
   final VoidCallback onInspect;
 
-  const _HotspotClusterCard({
-    required this.item,
-    required this.onInspect,
-  });
+  String get _title => switch (item.rank) {
+    1 => 'Arterial Commercial Axis',
+    2 => 'Industrial & Transit Corridor',
+    3 => 'Dense Residential Sector',
+    _ => item.title.replaceAll('\n', ' '),
+  };
+
+  String get _subtitle => switch (item.rank) {
+    1 => 'Klojen · High NDBI, low NDVI',
+    2 => 'Blimbing · High impervious',
+    3 => 'Lowokwaru · Moderate-high',
+    _ => '${item.district} · ${item.tag}',
+  };
+
+  String get _status =>
+      item.riskLevel == 'HIGH' ? 'Potential hotspot' : 'Elevated risk';
+
+  Color get _rankColor => switch (item.rank) {
+    1 => AppColors.heatHigh,
+    2 => AppColors.accent,
+    _ => AppColors.heatMedium,
+  };
+
+  Color get _statusColor =>
+      item.riskLevel == 'HIGH' ? AppColors.heatHigh : AppColors.heatMedium;
 
   @override
   Widget build(BuildContext context) {
-    final rankColor = item.rank == 1
-        ? AppColors.heatHigh
-        : item.rank == 2
-            ? AppColors.accent
-            : AppColors.heatMedium;
-
-    final statusColor = item.riskLevel == 'HIGH' ? AppColors.accent : AppColors.heatMedium;
-
     return InfoCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -414,10 +308,10 @@ class _HotspotClusterCard extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Container(
-                width: AppSpacing.lg,
-                height: AppSpacing.lg,
+                width: AppSpacing.lg + AppSpacing.xs / 2,
+                height: AppSpacing.lg + AppSpacing.xs / 2,
                 decoration: BoxDecoration(
-                  color: rankColor,
+                  color: _rankColor,
                   shape: BoxShape.circle,
                 ),
                 child: Center(
@@ -427,59 +321,84 @@ class _HotspotClusterCard extends StatelessWidget {
                       color: AppColors.surface,
                       fontWeight: FontWeight.w700,
                     ),
+                    maxLines: 1,
                   ),
                 ),
               ),
-              const SizedBox(width: AppSpacing.sm),
+              const SizedBox(width: AppSpacing.xs),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      item.title,
-                      style: AppTextStyles.bodyLarge.copyWith(
-                        fontWeight: FontWeight.w700,
+                      _title,
+                      style: AppTextStyles.body.copyWith(
+                        fontWeight: FontWeight.w600,
                       ),
+                      maxLines: 1,
                     ),
                     const SizedBox(height: AppSpacing.xs),
                     Text(
-                      '${item.district} • ${item.tag}',
+                      _subtitle,
                       style: AppTextStyles.caption.copyWith(
                         color: AppColors.textSecondary,
                       ),
+                      maxLines: 1,
                     ),
                   ],
                 ),
               ),
               const SizedBox(width: AppSpacing.xs),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Text(
-                    '${item.temp}°C',
-                    style: AppTextStyles.tabular(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w700,
+              SizedBox(
+                width: AppSpacing.xl * 2 + AppSpacing.sm,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Text(
+                      '${item.temp.toStringAsFixed(1)}°C',
+                      style: AppTextStyles.tabular(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w700,
+                      ),
+                      maxLines: 1,
                     ),
-                  ),
-                  Text(
-                    'Predicted LST',
-                    style: AppTextStyles.caption.copyWith(
-                      color: AppColors.textSecondary,
+                    Text(
+                      'Predicted LST',
+                      style: AppTextStyles.caption.copyWith(
+                        color: AppColors.textSecondary,
+                      ),
+                      maxLines: 1,
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ],
           ),
-          const SizedBox(height: AppSpacing.md),
+          const SizedBox(height: AppSpacing.sm),
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Flexible(
-                child: PillBadge(
-                  label: item.status,
-                  color: statusColor,
+              Expanded(
+                child: Row(
+                  children: [
+                    Container(
+                      width: AppSpacing.xs,
+                      height: AppSpacing.xs,
+                      decoration: BoxDecoration(
+                        color: _statusColor,
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                    const SizedBox(width: AppSpacing.xs),
+                    Expanded(
+                      child: Text(
+                        _status,
+                        style: AppTextStyles.caption.copyWith(
+                          color: _statusColor,
+                        ),
+                        maxLines: 1,
+                      ),
+                    ),
+                  ],
                 ),
               ),
               const SizedBox(width: AppSpacing.xs),
@@ -487,27 +406,14 @@ class _HotspotClusterCard extends StatelessWidget {
                 onTap: onInspect,
                 borderRadius: AppSpacing.roundedSm,
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: AppSpacing.xs,
-                    vertical: AppSpacing.xs,
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        'Inspect Area',
-                        style: AppTextStyles.body.copyWith(
-                          color: AppColors.accent,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      const SizedBox(width: AppSpacing.xs),
-                      const Icon(
-                        Icons.arrow_forward_rounded,
-                        size: AppSpacing.md,
-                        color: AppColors.accent,
-                      ),
-                    ],
+                  padding: const EdgeInsets.symmetric(vertical: AppSpacing.xs),
+                  child: Text(
+                    'Inspect area →',
+                    style: AppTextStyles.body.copyWith(
+                      color: AppColors.accent,
+                      fontWeight: FontWeight.w600,
+                    ),
+                    maxLines: 1,
                   ),
                 ),
               ),
