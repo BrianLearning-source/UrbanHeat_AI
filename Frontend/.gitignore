@@ -48,3 +48,7 @@ app.*.map.json
 .widget_preview/
 
 .DS_Store
+
+# Environtment configuration
+.env
+.env.*
