@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import '../../app/theme/app_colors.dart';
 import '../../app/theme/app_spacing.dart';
 import '../../app/theme/app_text_styles.dart';
 
 class AppTopBar extends StatelessWidget {
-  const AppTopBar({super.key});
+  const AppTopBar({super.key, this.onProfileTap});
+
+  final VoidCallback? onProfileTap;
 
   @override
   Widget build(BuildContext context) {
@@ -25,10 +28,14 @@ class AppTopBar extends StatelessWidget {
                   color: AppColors.accent.withValues(alpha: 0.15),
                   borderRadius: AppSpacing.roundedSm,
                 ),
-                child: const Icon(
-                  Icons.local_fire_department_rounded,
-                  color: AppColors.accent,
-                  size: AppSpacing.lg,
+                child: ClipRRect(
+                  borderRadius: AppSpacing.roundedSm,
+                  child: SvgPicture.asset(
+                    'assets/branding/urbanheat_logo.svg',
+                    width: AppSpacing.xl,
+                    height: AppSpacing.xl,
+                    semanticsLabel: 'UrbanHeat AI logo',
+                  ),
                 ),
               ),
               const SizedBox(width: AppSpacing.xs),
@@ -53,21 +60,25 @@ class AppTopBar extends StatelessWidget {
               ),
             ],
           ),
-          Container(
-            width: AppSpacing.xl,
-            height: AppSpacing.xl,
-            decoration: BoxDecoration(
-              color: AppColors.primary.withValues(alpha: 0.08),
-              shape: BoxShape.circle,
-              border: Border.all(
-                color: AppColors.border,
-                width: 1,
+          InkWell(
+            onTap: onProfileTap,
+            customBorder: const CircleBorder(),
+            child: Container(
+              width: AppSpacing.xl,
+              height: AppSpacing.xl,
+              decoration: BoxDecoration(
+                color: AppColors.primary.withValues(alpha: 0.08),
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: AppColors.border,
+                  width: 1,
+                ),
               ),
-            ),
-            child: const Icon(
-              Icons.person_rounded,
-              color: AppColors.primary,
-              size: AppSpacing.lg,
+              child: const Icon(
+                Icons.person_rounded,
+                color: AppColors.primary,
+                size: AppSpacing.lg,
+              ),
             ),
           ),
         ],

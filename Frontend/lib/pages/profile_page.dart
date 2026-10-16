@@ -1,15 +1,47 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+
 import '../app/theme/app_colors.dart';
 import '../app/theme/app_spacing.dart';
 import '../app/theme/app_text_styles.dart';
 import '../data/repositories/urban_heat_repository.dart';
 import '../shared/widgets/app_top_bar.dart';
 import '../shared/widgets/info_card.dart';
-import '../shared/widgets/pill_badge.dart';
-import '../shared/widgets/section_title.dart';
+import 'edit_profile_page.dart';
 
-class ProfilePage extends StatelessWidget {
+class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
+
+  @override
+  State<ProfilePage> createState() => _ProfilePageState();
+}
+
+class _ProfilePageState extends State<ProfilePage> {
+  late String _profileName;
+  File? _profilePhoto;
+
+  @override
+  void initState() {
+    super.initState();
+    _profileName = urbanHeatRepository.userName;
+  }
+
+  Future<void> _openEditProfile() async {
+    final result = await context.push<EditProfileResult>(
+      '/edit-profile',
+      extra: EditProfileArguments(
+        name: _profileName,
+        photoPath: _profilePhoto?.path,
+      ),
+    );
+    if (!mounted || result == null) return;
+    setState(() {
+      _profileName = result.name;
+      _profilePhoto = result.photoPath == null ? null : File(result.photoPath!);
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -28,14 +60,15 @@ class ProfilePage extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     const SizedBox(height: AppSpacing.xs),
-                    const _UserProfileHeaderCard(),
-                    const SizedBox(height: AppSpacing.md),
+                    _UserProfileHeaderCard(
+                      name: _profileName,
+                      photo: _profilePhoto,
+                      onTap: _openEditProfile,
+                    ),
                     const SizedBox(height: AppSpacing.lg),
-                    const _PreferencesSection(),
+                    const _ProfileSettingsCard(),
                     const SizedBox(height: AppSpacing.lg),
-                    const _AboutUrbanHeatSection(),
-                    const SizedBox(height: AppSpacing.lg),
-                    const _CacheAndSignOutSection(),
+                    _SignOutButton(onPressed: () => context.go('/login')),
                   ],
                 ),
               ),
@@ -48,278 +81,59 @@ class ProfilePage extends StatelessWidget {
 }
 
 class _UserProfileHeaderCard extends StatelessWidget {
-  const _UserProfileHeaderCard();
+  const _UserProfileHeaderCard({
+    required this.name,
+    required this.photo,
+    required this.onTap,
+  });
+
+  final String name;
+  final File? photo;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
     return InfoCard(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      onTap: onTap,
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Stack(
-                children: [
-                  Container(
-                    width: 56,
-                    height: 56,
-                    decoration: BoxDecoration(
-                      color: AppColors.primary.withValues(alpha: 0.1),
-                      borderRadius: AppSpacing.roundedSm,
-                      border: Border.all(
-                        color: AppColors.border,
-                        width: 1.5,
-                      ),
-                    ),
-                    child: const Icon(
+          Container(
+            width: 56,
+            height: 56,
+            decoration: BoxDecoration(
+              color: AppColors.primary.withValues(alpha: 0.1),
+              borderRadius: AppSpacing.roundedSm,
+              border: Border.all(color: AppColors.border, width: 1.5),
+            ),
+            child: ClipRRect(
+              borderRadius: AppSpacing.roundedSm,
+              child: photo == null
+                  ? const Icon(
                       Icons.person_rounded,
                       size: AppSpacing.xl,
                       color: AppColors.primary,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(width: AppSpacing.sm),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Text(
-                          urbanHeatRepository.userName,
-                          style: AppTextStyles.pageTitle.copyWith(
-                            fontSize: 20,
-                          ),
-                        ),
-                        const SizedBox(width: AppSpacing.xs),
-                        const Icon(
-                          Icons.verified_rounded,
-                          size: AppSpacing.md,
-                          color: AppColors.accent,
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: AppSpacing.xs),
-                    Text(
-                      urbanHeatRepository.userRole,
-                      style: AppTextStyles.caption.copyWith(
-                        color: AppColors.textSecondary,
+                    )
+                  : Image.file(
+                      photo!,
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, _, _) => const Icon(
+                        Icons.person_rounded,
+                        size: AppSpacing.xl,
+                        color: AppColors.primary,
                       ),
                     ),
-                    const SizedBox(height: AppSpacing.xs),
-                    Row(
-                      children: [
-                        const Icon(
-                          Icons.location_on_outlined,
-                          size: AppSpacing.sm,
-                          color: AppColors.accent,
-                        ),
-                        const SizedBox(width: AppSpacing.xs),
-                        Expanded(
-                          child: Text(
-                            urbanHeatRepository.userLocation,
-                            style: AppTextStyles.caption.copyWith(
-                              color: AppColors.accent,
-                              fontWeight: FontWeight.w600,
-                            ),
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _PreferencesSection extends StatelessWidget {
-  const _PreferencesSection();
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        SectionTitle(
-          title: 'PREFERENCES',
-          action: Text(
-            'Customized',
-            style: AppTextStyles.caption.copyWith(
-              color: AppColors.textSecondary,
             ),
           ),
-        ),
-        const SizedBox(height: AppSpacing.xs),
-        InfoCard(
-          padding: EdgeInsets.zero,
-          child: Column(
-            children: [
-              _ProfileSettingsTile(
-                icon: Icons.notifications_active_outlined,
-                title: 'Notifications & Advisory Alerts',
-                subtitle: 'Model simulation notices & heat alerts',
-                trailing: const PillBadge(
-                  label: 'Active',
-                  color: AppColors.accent,
-                ),
-                showBorder: true,
-              ),
-              _ProfileSettingsTile(
-                icon: Icons.tune_rounded,
-                title: 'Prediction & Observation Settings',
-                subtitle: 'Satellite Observation cycle, spatial resolution',
-                trailing: Text(
-                  '30m grid',
-                  style: AppTextStyles.caption.copyWith(
-                    color: AppColors.textSecondary,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                showBorder: true,
-              ),
-              const _ProfileSettingsTile(
-                icon: Icons.layers_outlined,
-                title: 'Map Layers & Display',
-                subtitle: 'LST Thermal gradient, NDVI overlay, contours',
-                showBorder: false,
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _AboutUrbanHeatSection extends StatelessWidget {
-  const _AboutUrbanHeatSection();
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        SectionTitle(
-          title: 'About the Project',
-          action: Text(
-            'PBL ML Study',
-            style: AppTextStyles.caption.copyWith(
-              color: AppColors.textSecondary,
-            ),
-          ),
-        ),
-        const SizedBox(height: AppSpacing.xs),
-        InfoCard(
-          padding: EdgeInsets.zero,
-          child: Column(
-            children: const [
-              _ProfileSettingsTile(
-                icon: Icons.description_outlined,
-                title: 'Project Information',
-                subtitle: 'Kota Malang Spatio-Temporal LST Modeling',
-                showBorder: true,
-              ),
-              _ProfileSettingsTile(
-                icon: Icons.science_outlined,
-                title: 'Data & Methodology',
-                subtitle: 'Sentinel-2 / Landsat LST, Linear Reg., Random Forest, XGBoost',
-                showBorder: true,
-              ),
-              _ProfileSettingsTile(
-                icon: Icons.public_rounded,
-                title: 'Scope & Study Area',
-                subtitle: 'City-wide Kota Malang, East Java',
-                showBorder: false,
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _ProfileSettingsTile extends StatelessWidget {
-  final IconData icon;
-  final String title;
-  final String subtitle;
-  final Widget? trailing;
-  final bool showBorder;
-
-  const _ProfileSettingsTile({
-    required this.icon,
-    required this.title,
-    required this.subtitle,
-    this.trailing,
-    this.showBorder = true,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        border: showBorder
-            ? const Border(
-                bottom: BorderSide(
-                  color: AppColors.border,
-                  width: 1,
-                ),
-              )
-            : null,
-      ),
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.md,
-        vertical: AppSpacing.sm,
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: AppSpacing.xl,
-            height: AppSpacing.xl,
-            decoration: BoxDecoration(
-              color: AppColors.primary.withValues(alpha: 0.06),
-              borderRadius: AppSpacing.roundedSm,
-            ),
-            child: Icon(
-              icon,
-              size: AppSpacing.md,
-              color: AppColors.primary,
-            ),
-          ),
-          const SizedBox(width: AppSpacing.sm),
+          const SizedBox(width: AppSpacing.md),
           Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  title,
-                  style: AppTextStyles.body.copyWith(
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                Text(
-                  subtitle,
-                  style: AppTextStyles.caption.copyWith(
-                    color: AppColors.textSecondary,
-                  ),
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ],
+            child: Text(
+              name,
+              style: AppTextStyles.sectionTitle,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
             ),
           ),
-          if (trailing != null) ...[
-            const SizedBox(width: AppSpacing.xs),
-            trailing!,
-          ],
           const SizedBox(width: AppSpacing.xs),
           const Icon(
             Icons.chevron_right_rounded,
@@ -332,145 +146,246 @@ class _ProfileSettingsTile extends StatelessWidget {
   }
 }
 
-class _CacheAndSignOutSection extends StatelessWidget {
-  const _CacheAndSignOutSection();
+class _ProfileSettingsCard extends StatefulWidget {
+  const _ProfileSettingsCard();
+
+  @override
+  State<_ProfileSettingsCard> createState() => _ProfileSettingsCardState();
+}
+
+class _ProfileSettingsCardState extends State<_ProfileSettingsCard> {
+  bool _notificationsEnabled = true;
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        InfoCard(
+    return InfoCard(
+      padding: EdgeInsets.zero,
+      child: Column(
+        children: [
+          _SettingsRow(
+            icon: Icons.notifications_active_outlined,
+            title: 'Notifications',
+            subtitle: 'Heat & model alerts',
+            trailing: Transform.scale(
+              scale: 0.85,
+              child: Switch(
+                value: _notificationsEnabled,
+                materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                activeTrackColor: AppColors.accent,
+                activeThumbColor: AppColors.surface,
+                inactiveTrackColor: AppColors.border,
+                trackOutlineColor: const WidgetStatePropertyAll(
+                  Colors.transparent,
+                ),
+                trackOutlineWidth: const WidgetStatePropertyAll(0),
+                onChanged: (enabled) {
+                  setState(() => _notificationsEnabled = enabled);
+                  // TODO: Persist the notification preference with the backend.
+                },
+              ),
+            ),
+          ),
+          const _SettingsDivider(),
+          _SettingsRow(
+            icon: Icons.lock_outline_rounded,
+            title: 'Change Password',
+            subtitle: 'Update your account password',
+            trailing: const _SettingsChevron(),
+            onTap: () => context.push('/change-password'),
+          ),
+          const _SettingsDivider(),
+          const _SettingsRow(
+            icon: Icons.description_outlined,
+            title: 'Project Information',
+            subtitle: 'Detail information about UrbanHeat AI',
+            trailing: _SettingsChevron(),
+          ),
+          const _SettingsDivider(),
+          _SettingsRow(
+            icon: Icons.shield_outlined,
+            title: 'Privacy Policy',
+            subtitle: 'How your data is handled',
+            trailing: const _SettingsChevron(),
+            onTap: () {
+              // TODO: Connect this row to the privacy policy destination.
+            },
+          ),
+          const _SettingsDivider(),
+          const _SettingsRow(
+            icon: Icons.info_outline_rounded,
+            title: 'App version',
+            subtitle: 'UrbanHeat AI',
+            trailing: _AppVersionLabel(),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ProfileIcon extends StatelessWidget {
+  const _ProfileIcon({required this.icon});
+
+  final IconData icon;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 40,
+      height: 40,
+      decoration: BoxDecoration(
+        color: AppColors.background,
+        borderRadius: AppSpacing.roundedSm,
+      ),
+      child: Icon(icon, size: AppSpacing.md, color: AppColors.primary),
+    );
+  }
+}
+
+class _SettingsDivider extends StatelessWidget {
+  const _SettingsDivider();
+
+  @override
+  Widget build(BuildContext context) {
+    return const Padding(
+      padding: EdgeInsets.only(
+        left: AppSpacing.md + 40 + AppSpacing.sm,
+        right: AppSpacing.md,
+      ),
+      child: Divider(height: 1, thickness: 1, color: AppColors.border),
+    );
+  }
+}
+
+class _SettingsRow extends StatelessWidget {
+  const _SettingsRow({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    required this.trailing,
+    this.onTap,
+  });
+
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final Widget trailing;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        child: Padding(
           padding: const EdgeInsets.symmetric(
             horizontal: AppSpacing.md,
             vertical: AppSpacing.sm,
           ),
           child: Row(
             children: [
-              Container(
-                width: AppSpacing.xl,
-                height: AppSpacing.xl,
-                decoration: BoxDecoration(
-                  color: AppColors.accent.withValues(alpha: 0.1),
-                  borderRadius: AppSpacing.roundedSm,
-                ),
-                child: const Icon(
-                  Icons.storage_rounded,
-                  color: AppColors.accent,
-                  size: AppSpacing.md,
-                ),
-              ),
+              _ProfileIcon(icon: icon),
               const SizedBox(width: AppSpacing.sm),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
                   children: [
                     Text(
-                      'Offline Inference Cache',
+                      title,
                       style: AppTextStyles.body.copyWith(
                         fontWeight: FontWeight.w600,
                       ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
                     Text(
-                      '14.8 MB local model weights stored',
+                      subtitle,
                       style: AppTextStyles.caption.copyWith(
                         color: AppColors.textSecondary,
                       ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ],
                 ),
               ),
-              InkWell(
-                onTap: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Offline inference cache cleared'),
-                      duration: Duration(seconds: 2),
-                    ),
-                  );
-                },
-                borderRadius: AppSpacing.roundedSm,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: AppSpacing.sm,
-                    vertical: AppSpacing.xs,
-                  ),
-                  decoration: BoxDecoration(
-                    color: AppColors.background,
-                    borderRadius: AppSpacing.roundedSm,
-                    border: Border.all(
-                      color: AppColors.border,
-                      width: 1,
-                    ),
-                  ),
-                  child: Text(
-                    'Clear Cache',
-                    style: AppTextStyles.caption.copyWith(
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.primary,
-                    ),
-                  ),
+              const SizedBox(width: AppSpacing.xs),
+              trailing,
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _SettingsChevron extends StatelessWidget {
+  const _SettingsChevron();
+
+  @override
+  Widget build(BuildContext context) {
+    return const Icon(
+      Icons.chevron_right_rounded,
+      color: AppColors.textSecondary,
+      size: AppSpacing.md,
+    );
+  }
+}
+
+class _AppVersionLabel extends StatelessWidget {
+  const _AppVersionLabel();
+
+  @override
+  Widget build(BuildContext context) {
+    // TODO: Read the app version from pubspec metadata.
+    return Text(
+      '1.0.0',
+      style: AppTextStyles.caption.copyWith(color: AppColors.textSecondary),
+    );
+  }
+}
+
+class _SignOutButton extends StatelessWidget {
+  const _SignOutButton({required this.onPressed});
+
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: AppColors.surface,
+      borderRadius: AppSpacing.roundedSm,
+      child: InkWell(
+        onTap: onPressed,
+        borderRadius: AppSpacing.roundedSm,
+        child: Container(
+          height: 54,
+          decoration: BoxDecoration(
+            borderRadius: AppSpacing.roundedSm,
+            border: Border.all(color: AppColors.border),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(
+                Icons.logout_rounded,
+                color: AppColors.heatHigh,
+                size: AppSpacing.md,
+              ),
+              const SizedBox(width: AppSpacing.xs),
+              Text(
+                'Sign Out',
+                style: AppTextStyles.body.copyWith(
+                  color: AppColors.heatHigh,
+                  fontWeight: FontWeight.w600,
                 ),
               ),
             ],
           ),
         ),
-        const SizedBox(height: AppSpacing.md),
-        InkWell(
-          onTap: () {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Signed out from study session'),
-                duration: Duration(seconds: 2),
-              ),
-            );
-          },
-          borderRadius: AppSpacing.roundedMd,
-          child: Container(
-            padding: const EdgeInsets.symmetric(
-              vertical: AppSpacing.md,
-              horizontal: AppSpacing.md,
-            ),
-            decoration: BoxDecoration(
-              color: AppColors.heatHigh.withValues(alpha: 0.08),
-              borderRadius: AppSpacing.roundedMd,
-              border: Border.all(
-                color: AppColors.heatHigh.withValues(alpha: 0.3),
-                width: 1,
-              ),
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Icon(
-                  Icons.logout_rounded,
-                  color: AppColors.heatHigh,
-                  size: AppSpacing.md,
-                ),
-                const SizedBox(width: AppSpacing.xs),
-                Flexible(
-                  child: Text(
-                    'Sign Out from Study Session',
-                    style: AppTextStyles.bodyLarge.copyWith(
-                      color: AppColors.heatHigh,
-                      fontWeight: FontWeight.w600,
-                    ),
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-        const SizedBox(height: AppSpacing.lg),
-        Text(
-          'UrbanHeat AI Research Team · 2025',
-          textAlign: TextAlign.center,
-          style: AppTextStyles.caption.copyWith(
-            color: AppColors.textSecondary,
-          ),
-        ),
-      ],
+      ),
     );
   }
 }
