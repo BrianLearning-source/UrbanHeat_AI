@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../pages/heatmap_page.dart';
 import '../pages/prediction_result_page.dart';
@@ -17,10 +18,17 @@ import '../pages/splash_pages.dart';
 import '../pages/onboarding_pages.dart';
 import '../data/repositories/urban_heat_repository.dart';
 import '../shared/widgets/app_bottom_nav.dart';
+import '../features/auth/domain/repository/auth_repository.dart';
+import '../data/repositories/supabase_auth_repository.dart';
 
 // Key ini memberi GoRouter akses ke navigator utama aplikasi.
 final GlobalKey<NavigatorState> _rootNavigatorKey =
     GlobalKey<NavigatorState>(debugLabel: 'rootNavigator');
+
+// Kunci ini memilih implementasi repository dan menyediakan dependency untuk halaman
+final AuthRepository authRepository = SupabaseAuthRepository(
+  Supabase.instance.client,
+);
 
 final GoRouter appRouter = GoRouter(
   navigatorKey: _rootNavigatorKey,
@@ -32,7 +40,7 @@ final GoRouter appRouter = GoRouter(
       path: '/onboarding',
       builder: (context, state) => const OnboardingScreen(),
     ),
-    GoRoute(path: '/login', builder: (context, state) => const LoginScreen()),
+    GoRoute(path: '/login', builder: (context, state) => LoginScreen(authRepository: authRepository,),),
     GoRoute(
       path: '/register',
       builder: (context, state) => const RegisterScreen(),

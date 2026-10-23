@@ -4,10 +4,16 @@ import 'package:go_router/go_router.dart';
 import '../app/theme/app_colors.dart';
 import '../app/theme/app_spacing.dart';
 import '../app/theme/app_text_styles.dart';
+import '../features/auth/domain/repository/auth_repository.dart';
 import 'auth_widgets.dart';
 
 class LoginScreen extends StatefulWidget {
-  const LoginScreen({super.key});
+  const LoginScreen({
+    super.key,
+    required this.authRepository,
+  });
+
+  final AuthRepository authRepository;
 
   @override
   State<LoginScreen> createState() => _LoginScreenState();
@@ -20,10 +26,10 @@ class _LoginScreenState extends State<LoginScreen>
   late final AnimationController _passwordAnimation;
   bool _showPassword = false;
   bool _obscurePassword = true;
-
+  bool _isSubmiting = false;
   bool get _validEmail => _isValidEmail(_emailController.text.trim());
   bool get _canLogIn =>
-      _validEmail && (!_showPassword || _passwordController.text.length >= 8);
+      _validEmail && (!_showPassword || _passwordController.text.length >= 8) && !_isSubmiting;
 
   @override
   void initState() {
@@ -64,9 +70,29 @@ class _LoginScreenState extends State<LoginScreen>
     }
   }
 
-  void _logIn() {
+  Future<void> _logIn() async {
     if (!_canLogIn) return;
-    // TODO: connect to backend email+password login endpoint when available.
+
+    // Sembunyikan keyboard. Aktifkan indikator loading
+    FocusScope.of(context).unfocus();
+    setState(() => _isSubmiting = true);
+
+    try {
+      // Meneruskan email dan kata sandi ke domain layer lalu repo akan panggil Supabase Auth
+      await widget.authRepository.signIn(
+        email: _emailController.text.trim(),
+        password: _passwordController.text,
+      );
+
+      // memastikan widget masih aktif sebelum melakukan navigasi
+      if(!mounted) return;
+
+      context.go('/home');
+    } catch (e) {
+      // Handle login error
+    } finally {
+      setState(() => _isSubmiting = false);
+    }
   }
 
   void _signInWithGoogle() {
@@ -136,7 +162,7 @@ class _LoginScreenState extends State<LoginScreen>
                                 _showPassword || _passwordAnimation.isAnimating
                                 ? SizeTransition(
                                     sizeFactor: _passwordAnimation,
-                                    axisAlignment: -1,
+                                    alignment : Alignment.topCenter,
                                     child: FadeTransition(
                                       opacity: _passwordAnimation,
                                       child: Padding(
@@ -226,7 +252,17 @@ class _LoginScreenState extends State<LoginScreen>
                                   fontWeight: FontWeight.w600,
                                 ),
                               ),
-                              child: const Text('Log in'),
+                              // child: const Text('Log in'),
+                              child: _isSubmiting
+                                  ? const SizedBox(
+                                      width: 20,
+                                      height: 20,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                        color: AppColors.surface,
+                                      ),
+                                    )
+                                  : const Text('Log in'),
                             ),
                           ),
                           const SizedBox(height: AppSpacing.lg),
