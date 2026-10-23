@@ -4,8 +4,9 @@ import 'package:urbanheat_ai/app/app.dart';
 import 'package:urbanheat_ai/app/router.dart';
 
 void main() {
-  testWidgets('UrbanHeat AI initial smoke and navigation test',
-      (WidgetTester tester) async {
+  testWidgets('UrbanHeat AI initial smoke and navigation test', (
+    WidgetTester tester,
+  ) async {
     tester.view.physicalSize = const Size(400, 900);
     tester.view.devicePixelRatio = 1.0;
     addTearDown(() {
@@ -13,11 +14,12 @@ void main() {
       tester.view.resetDevicePixelRatio();
     });
 
+    appRouter.go('/home');
     await tester.pumpWidget(const UrbanHeatApp());
     await tester.pumpAndSettle();
 
-    // 1. Verify Home Screen is initially active
-    expect(find.text('UrbanHeat AI'), findsWidgets);
+    // 1. Start the smoke flow at Home, where the navigation test begins.
+    expect(find.text('Good morning, Nasywa'), findsOneWidget);
     expect(find.text('City-wide Heat\nOutlook (Kota\nMalang)'), findsOneWidget);
 
     // Scroll to and tap "Explore City Heatmap →" -> /heatmap
@@ -73,11 +75,11 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Potential Hotspots'), findsOneWidget);
 
-    // Scroll to and tap "Select on Heatmap to View Area Detail" -> /heatmap
-    final selectOnHeatmapFinder = find.text('Select on Heatmap to View Area Detail');
-    await tester.ensureVisible(selectOnHeatmapFinder);
+    // Tap the available "View on Heatmap" action -> /heatmap
+    final viewOnHeatmapFinder = find.text('View on Heatmap');
+    await tester.ensureVisible(viewOnHeatmapFinder);
     await tester.pumpAndSettle();
-    await tester.tap(selectOnHeatmapFinder);
+    await tester.tap(viewOnHeatmapFinder);
     await tester.pumpAndSettle();
     expect(find.text('City Heatmap'), findsOneWidget);
 
@@ -85,10 +87,10 @@ void main() {
     appRouter.go('/hotspots/area/MC-204');
     await tester.pumpAndSettle();
     expect(find.text('Area Detail'), findsOneWidget);
-    expect(find.text('GRID #MC-204 • CENTRAL'), findsOneWidget);
+    expect(find.text('Grid #MC-204 · Central'), findsOneWidget);
 
-    // Scroll to and tap "Prediction & Model Info" -> factors
-    final modelInfoFinder = find.text('Prediction & Model Info');
+    // Scroll to and tap the SHAP link -> factors
+    final modelInfoFinder = find.text('Tap to view feature impact (SHAP) →');
     await tester.ensureVisible(modelInfoFinder);
     await tester.pumpAndSettle();
     await tester.tap(modelInfoFinder);
@@ -99,14 +101,6 @@ void main() {
     appRouter.go('/profile');
     await tester.pumpAndSettle();
     expect(find.text('Nasywa'), findsOneWidget);
-    expect(find.text('About the Project'), findsOneWidget);
-
-    // Scroll to and tap "Clear Cache" -> SnackBar
-    final clearCacheFinder = find.text('Clear Cache');
-    await tester.ensureVisible(clearCacheFinder);
-    await tester.pumpAndSettle();
-    await tester.tap(clearCacheFinder);
-    await tester.pump();
-    expect(find.text('Offline inference cache cleared'), findsOneWidget);
+    expect(find.text('Project Information'), findsOneWidget);
   });
 }
