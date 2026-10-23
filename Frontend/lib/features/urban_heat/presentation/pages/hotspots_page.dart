@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-import '../app/theme/app_colors.dart';
-import '../app/theme/app_spacing.dart';
-import '../app/theme/app_text_styles.dart';
-import '../features/urban_heat/domain/entities/hotspot.dart';
-import '../features/urban_heat/domain/repositories/urban_heat_repository.dart';
-import '../shared/widgets/app_top_bar.dart';
-import '../shared/widgets/info_card.dart';
+import '../../../../app/theme/app_colors.dart';
+import '../../../../app/theme/app_spacing.dart';
+import '../../../../app/theme/app_text_styles.dart';
+import '../../domain/entities/hotspot.dart';
+import '../../domain/repositories/urban_heat_repository.dart';
+import '../../../../shared/widgets/app_top_bar.dart';
+import '../../../../shared/widgets/info_card.dart';
 
 class HotspotsPage extends StatefulWidget {
   const HotspotsPage({super.key, required this.repository});

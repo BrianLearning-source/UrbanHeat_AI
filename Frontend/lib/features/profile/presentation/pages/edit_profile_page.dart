@@ -5,11 +5,10 @@ import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 
-import '../app/theme/app_colors.dart';
-import '../app/theme/app_spacing.dart';
-import '../app/theme/app_text_styles.dart';
-import '../data/repositories/urban_heat_repository.dart';
-import 'auth_widgets.dart';
+import '../../../../app/theme/app_colors.dart';
+import '../../../../app/theme/app_spacing.dart';
+import '../../../../app/theme/app_text_styles.dart';
+import '../../../../shared/widgets/auth_widgets.dart';
 
 class EditProfileArguments {
   const EditProfileArguments({required this.name, this.photoPath});
@@ -26,9 +25,13 @@ class EditProfileResult {
 }
 
 class EditProfileScreen extends StatefulWidget {
-  const EditProfileScreen({super.key, this.initialName, this.initialPhotoPath});
+  const EditProfileScreen({
+    super.key,
+    required this.initialName,
+    this.initialPhotoPath,
+  });
 
-  final String? initialName;
+  final String initialName;
   final String? initialPhotoPath;
 
   @override
@@ -45,7 +48,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   bool _submitted = false;
   bool _isSaving = false;
 
-  String get _initialName => widget.initialName ?? urbanHeatRepository.userName;
+  String get _initialName => widget.initialName;
   String? get _photoPath =>
       _photoRemoved ? null : (_pickedPhoto?.path ?? widget.initialPhotoPath);
   bool get _photoChanged => _photoRemoved || _pickedPhoto != null;

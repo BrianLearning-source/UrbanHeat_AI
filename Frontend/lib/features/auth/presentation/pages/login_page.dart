@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-import '../app/theme/app_colors.dart';
-import '../app/theme/app_spacing.dart';
-import '../app/theme/app_text_styles.dart';
-import 'auth_widgets.dart';
+import '../../../../app/theme/app_colors.dart';
+import '../../../../app/theme/app_spacing.dart';
+import '../../../../app/theme/app_text_styles.dart';
+import '../../../../shared/widgets/auth_widgets.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -136,7 +136,7 @@ class _LoginScreenState extends State<LoginScreen>
                                 _showPassword || _passwordAnimation.isAnimating
                                 ? SizeTransition(
                                     sizeFactor: _passwordAnimation,
-                                    axisAlignment: -1,
+                                    alignment: Alignment.topCenter,
                                     child: FadeTransition(
                                       opacity: _passwordAnimation,
                                       child: Padding(

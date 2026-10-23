@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import '../app/theme/app_colors.dart';
-import '../app/theme/app_spacing.dart';
-import '../app/theme/app_text_styles.dart';
-import '../shared/widgets/app_top_bar.dart';
-import '../shared/widgets/buttons.dart';
-import '../shared/widgets/info_card.dart';
-import '../shared/widgets/placeholder_image.dart';
+
+import '../../../../app/theme/app_colors.dart';
+import '../../../../app/theme/app_spacing.dart';
+import '../../../../app/theme/app_text_styles.dart';
+import '../../../../shared/widgets/app_top_bar.dart';
+import '../../../../shared/widgets/buttons.dart';
+import '../../../../shared/widgets/info_card.dart';
+import '../../../../shared/widgets/placeholder_image.dart';
 
 class HeatmapPage extends StatelessWidget {
   const HeatmapPage({super.key});
@@ -29,10 +30,7 @@ class HeatmapPage extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     const SizedBox(height: AppSpacing.xs),
-                    Text(
-                      'City Heatmap',
-                      style: AppTextStyles.pageTitle,
-                    ),
+                    Text('City Heatmap', style: AppTextStyles.pageTitle),
                     const SizedBox(height: AppSpacing.xs),
                     Text(
                       'Spatial Land Surface Temperature distribution across Kota Malang',

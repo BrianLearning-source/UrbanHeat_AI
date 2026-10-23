@@ -1,13 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-import '../app/theme/app_colors.dart';
-import '../app/theme/app_spacing.dart';
-import '../app/theme/app_text_styles.dart';
-import '../data/services/onboarding_preferences.dart';
+import '../../../../app/theme/app_colors.dart';
+import '../../../../app/theme/app_spacing.dart';
+import '../../../../app/theme/app_text_styles.dart';
+import '../../domain/repositories/onboarding_repository.dart';
 
 class OnboardingScreen extends StatefulWidget {
-  const OnboardingScreen({super.key});
+  const OnboardingScreen({super.key, required this.repository});
+
+  final OnboardingRepository repository;
 
   @override
   State<OnboardingScreen> createState() => _OnboardingScreenState();
@@ -39,7 +41,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   Future<void> _finish() async {
     if (_isFinishing) return;
     setState(() => _isFinishing = true);
-    await OnboardingPreferences.markOnboardingSeen();
+    await widget.repository.markOnboardingSeen();
     if (!mounted) return;
     context.go('/login');
   }

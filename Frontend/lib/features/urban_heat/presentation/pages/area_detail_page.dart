@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-import '../app/theme/app_colors.dart';
-import '../app/theme/app_spacing.dart';
-import '../app/theme/app_text_styles.dart';
-import '../shared/widgets/info_card.dart';
-import '../shared/widgets/section_title.dart';
-import 'auth_widgets.dart';
+import '../../../../app/theme/app_colors.dart';
+import '../../../../app/theme/app_spacing.dart';
+import '../../../../app/theme/app_text_styles.dart';
+import '../../../../shared/widgets/info_card.dart';
+import '../../../../shared/widgets/section_title.dart';
+import '../../../../shared/widgets/auth_widgets.dart';
 
 class AreaDetailPage extends StatelessWidget {
   const AreaDetailPage({super.key, required this.gridId});

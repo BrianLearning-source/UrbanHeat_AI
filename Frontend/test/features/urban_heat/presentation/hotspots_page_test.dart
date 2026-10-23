@@ -7,7 +7,7 @@ import 'package:urbanheat_ai/features/urban_heat/domain/entities/mitigation.dart
 import 'package:urbanheat_ai/features/urban_heat/domain/entities/shap_dimension.dart';
 import 'package:urbanheat_ai/features/urban_heat/domain/entities/shap_factor.dart';
 import 'package:urbanheat_ai/features/urban_heat/domain/repositories/urban_heat_repository.dart';
-import 'package:urbanheat_ai/pages/hotspots_page.dart';
+import 'package:urbanheat_ai/features/urban_heat/presentation/pages/hotspots_page.dart';
 
 void main() {
   testWidgets('HotspotsPage renders entities from a successful repository', (

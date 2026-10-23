@@ -1,17 +1,11 @@
-import '../features/urban_heat/domain/entities/environmental_indicator.dart';
-import '../features/urban_heat/domain/entities/hotspot.dart';
-import '../features/urban_heat/domain/entities/mitigation.dart';
-import '../features/urban_heat/domain/entities/shap_dimension.dart';
-import '../features/urban_heat/domain/entities/shap_factor.dart';
+import '../domain/entities/environmental_indicator.dart';
+import '../domain/entities/hotspot.dart';
+import '../domain/entities/mitigation.dart';
+import '../domain/entities/shap_dimension.dart';
+import '../domain/entities/shap_factor.dart';
 
-class MockData {
-  const MockData._();
-
-  // User Profile
-  static const String userName = 'Nasywa';
-  static const String userRole =
-      'Urban Researcher & Environmental Planner • Kota Malang Spatial Analysis Group';
-  static const String userLocation = 'Kota Malang, East Java';
+class MockUrbanHeatData {
+  const MockUrbanHeatData._();
 
   // Hotspots list
   static const List<Hotspot> hotspots = [

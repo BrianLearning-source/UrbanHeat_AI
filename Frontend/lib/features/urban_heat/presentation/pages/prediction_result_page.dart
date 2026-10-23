@@ -1,14 +1,16 @@
 import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import '../app/theme/app_colors.dart';
-import '../app/theme/app_spacing.dart';
-import '../app/theme/app_text_styles.dart';
-import '../shared/widgets/app_top_bar.dart';
-import '../shared/widgets/buttons.dart';
-import '../shared/widgets/info_card.dart';
-import '../shared/widgets/pill_badge.dart';
-import '../shared/widgets/section_title.dart';
+
+import '../../../../app/theme/app_colors.dart';
+import '../../../../app/theme/app_spacing.dart';
+import '../../../../app/theme/app_text_styles.dart';
+import '../../../../shared/widgets/app_top_bar.dart';
+import '../../../../shared/widgets/buttons.dart';
+import '../../../../shared/widgets/info_card.dart';
+import '../../../../shared/widgets/pill_badge.dart';
+import '../../../../shared/widgets/section_title.dart';
 
 class PredictionResultPage extends StatelessWidget {
   const PredictionResultPage({super.key});
@@ -41,7 +43,8 @@ class PredictionResultPage extends StatelessWidget {
                     const SizedBox(height: AppSpacing.lg),
                     DarkButton(
                       label: 'View Detailed Analysis →',
-                      onPressed: () => context.go('/hotspots/area/LW-A12/factors'),
+                      onPressed: () =>
+                          context.go('/hotspots/area/LW-A12/factors'),
                     ),
                     const SizedBox(height: AppSpacing.sm),
                     SoftButton(
@@ -110,16 +113,11 @@ class PredictionResultPage extends StatelessWidget {
           ],
         ),
         const SizedBox(height: AppSpacing.sm),
-        Text(
-          'Prediction Result',
-          style: AppTextStyles.pageTitle,
-        ),
+        Text('Prediction Result', style: AppTextStyles.pageTitle),
         const SizedBox(height: AppSpacing.xs),
         Text(
           'Lowokwaru Urban Heat Island Micro-climate Simulation',
-          style: AppTextStyles.caption.copyWith(
-            color: AppColors.textSecondary,
-          ),
+          style: AppTextStyles.caption.copyWith(color: AppColors.textSecondary),
         ),
       ],
     );
@@ -268,10 +266,7 @@ class _GaugePainter extends CustomPainter {
     final gradient = SweepGradient(
       startAngle: startAngle,
       endAngle: startAngle + sweepAngle,
-      colors: const [
-        AppColors.accent,
-        AppColors.heatHigh,
-      ],
+      colors: const [AppColors.accent, AppColors.heatHigh],
     );
 
     final activePaint = Paint()
@@ -282,13 +277,7 @@ class _GaugePainter extends CustomPainter {
 
     // 78% progress along 270 degree arc
     const progress = 0.78;
-    canvas.drawArc(
-      rect,
-      startAngle,
-      sweepAngle * progress,
-      false,
-      activePaint,
-    );
+    canvas.drawArc(rect, startAngle, sweepAngle * progress, false, activePaint);
   }
 
   @override
@@ -307,9 +296,7 @@ class _GaugeMetricItem extends StatelessWidget {
       children: [
         Text(
           label,
-          style: AppTextStyles.caption.copyWith(
-            color: AppColors.textSecondary,
-          ),
+          style: AppTextStyles.caption.copyWith(color: AppColors.textSecondary),
         ),
         const SizedBox(height: AppSpacing.xs),
         Text(
@@ -391,11 +378,7 @@ class _ContextRow extends StatelessWidget {
             color: AppColors.accent.withValues(alpha: 0.1),
             borderRadius: AppSpacing.roundedSm,
           ),
-          child: Icon(
-            icon,
-            color: AppColors.accent,
-            size: AppSpacing.md,
-          ),
+          child: Icon(icon, color: AppColors.accent, size: AppSpacing.md),
         ),
         const SizedBox(width: AppSpacing.sm),
         Expanded(
@@ -411,9 +394,7 @@ class _ContextRow extends StatelessWidget {
               const SizedBox(height: AppSpacing.xs),
               Text(
                 title,
-                style: AppTextStyles.body.copyWith(
-                  fontWeight: FontWeight.w600,
-                ),
+                style: AppTextStyles.body.copyWith(fontWeight: FontWeight.w600),
               ),
               Text(
                 subtitle,
@@ -542,10 +523,7 @@ class _DiagnosticMetricBox extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppColors.background,
         borderRadius: AppSpacing.roundedSm,
-        border: Border.all(
-          color: AppColors.border,
-          width: 1,
-        ),
+        border: Border.all(color: AppColors.border, width: 1),
       ),
       child: Column(
         children: [

@@ -3,16 +3,18 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-import '../app/theme/app_colors.dart';
-import '../app/theme/app_spacing.dart';
-import '../app/theme/app_text_styles.dart';
-import '../data/repositories/urban_heat_repository.dart';
-import '../shared/widgets/app_top_bar.dart';
-import '../shared/widgets/info_card.dart';
+import '../../../../app/theme/app_colors.dart';
+import '../../../../app/theme/app_spacing.dart';
+import '../../../../app/theme/app_text_styles.dart';
+import '../../domain/repositories/profile_repository.dart';
+import '../../../../shared/widgets/app_top_bar.dart';
+import '../../../../shared/widgets/info_card.dart';
 import 'edit_profile_page.dart';
 
 class ProfilePage extends StatefulWidget {
-  const ProfilePage({super.key});
+  const ProfilePage({super.key, required this.repository});
+
+  final ProfileRepository repository;
 
   @override
   State<ProfilePage> createState() => _ProfilePageState();
@@ -25,7 +27,7 @@ class _ProfilePageState extends State<ProfilePage> {
   @override
   void initState() {
     super.initState();
-    _profileName = urbanHeatRepository.userName;
+    _profileName = widget.repository.getProfile().data?.name ?? '';
   }
 
   Future<void> _openEditProfile() async {

@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 
-import '../app/theme/app_colors.dart';
-import '../app/theme/app_spacing.dart';
-import '../app/theme/app_text_styles.dart';
+import '../../app/theme/app_colors.dart';
+import '../../app/theme/app_spacing.dart';
+import '../../app/theme/app_text_styles.dart';
 
 class AuthTextField extends StatelessWidget {
   const AuthTextField({

@@ -4,12 +4,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 
-import '../app/theme/app_colors.dart';
-import '../app/theme/app_spacing.dart';
-import '../data/services/onboarding_preferences.dart';
+import '../../../../app/theme/app_colors.dart';
+import '../../../../app/theme/app_spacing.dart';
+import '../../domain/repositories/onboarding_repository.dart';
 
 class SplashScreen extends StatefulWidget {
-  const SplashScreen({super.key});
+  const SplashScreen({super.key, required this.repository});
+
+  final OnboardingRepository repository;
 
   @override
   State<SplashScreen> createState() => _SplashScreenState();
@@ -23,13 +25,13 @@ class _SplashScreenState extends State<SplashScreen> {
   }
 
   Future<void> _routeAfterSplash() async {
-    final onboardingSeen = OnboardingPreferences.hasSeenOnboarding();
+    final onboardingSeen = widget.repository.hasSeenOnboarding();
     await Future<void>.delayed(const Duration(milliseconds: 1500));
-    final hasSeenOnboarding = await onboardingSeen;
+    final result = await onboardingSeen;
     if (!mounted) return;
 
     // TODO: once backend/auth exists, send users with a valid session to Home.
-    context.go(hasSeenOnboarding ? '/login' : '/onboarding');
+    context.go(result.data == true ? '/login' : '/onboarding');
   }
 
   @override
