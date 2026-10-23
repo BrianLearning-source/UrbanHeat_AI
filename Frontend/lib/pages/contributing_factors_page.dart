@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+
 import '../app/theme/app_colors.dart';
 import '../app/theme/app_spacing.dart';
 import '../app/theme/app_text_styles.dart';
-import '../data/repositories/urban_heat_repository.dart';
+import '../features/urban_heat/domain/entities/shap_dimension.dart';
+import '../features/urban_heat/domain/entities/shap_factor.dart';
+import '../features/urban_heat/domain/repositories/urban_heat_repository.dart';
 import '../shared/widgets/app_top_bar.dart';
 import '../shared/widgets/buttons.dart';
 import '../shared/widgets/feature_bar_row.dart';
@@ -11,16 +14,49 @@ import '../shared/widgets/info_card.dart';
 import '../shared/widgets/pill_badge.dart';
 import '../shared/widgets/section_title.dart';
 
-class ContributingFactorsPage extends StatelessWidget {
+class ContributingFactorsPage extends StatefulWidget {
   final String gridId;
+  final UrbanHeatRepository repository;
 
   const ContributingFactorsPage({
     super.key,
     required this.gridId,
+    required this.repository,
   });
 
   @override
+  State<ContributingFactorsPage> createState() =>
+      _ContributingFactorsPageState();
+}
+
+class _ContributingFactorsPageState extends State<ContributingFactorsPage> {
+  List<ShapFactor> _factors = const [];
+  List<ShapDimension> _dimensions = const [];
+  bool _loading = true;
+  bool _failed = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadAnalysis();
+  }
+
+  Future<void> _loadAnalysis() async {
+    final factors = await widget.repository.getShapFactors(widget.gridId);
+    final dimensions = await widget.repository.getShapDimensions(widget.gridId);
+    if (!mounted) return;
+
+    setState(() {
+      _factors = factors.data ?? const [];
+      _dimensions = dimensions.data ?? const [];
+      _failed = factors.failure != null || dimensions.failure != null;
+      _loading = false;
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final gridId = widget.gridId;
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
@@ -40,13 +76,20 @@ class ContributingFactorsPage extends StatelessWidget {
                     const SizedBox(height: AppSpacing.md),
                     _ShapTargetSummaryCard(gridId: gridId),
                     const SizedBox(height: AppSpacing.lg),
-                    const _RelativeAssociationSection(),
-                    const SizedBox(height: AppSpacing.lg),
-                    const _DetailedDimensionsSection(),
+                    if (_loading)
+                      const Center(child: CircularProgressIndicator())
+                    else if (_failed)
+                      const Text('Unable to load contributing factors.')
+                    else ...[
+                      _RelativeAssociationSection(factors: _factors),
+                      const SizedBox(height: AppSpacing.lg),
+                      _DetailedDimensionsSection(dimensions: _dimensions),
+                    ],
                     const SizedBox(height: AppSpacing.lg),
                     GradientButton(
                       label: 'Explore Mitigation Insights →',
-                      onPressed: () => context.go('/hotspots/area/$gridId/mitigation'),
+                      onPressed: () =>
+                          context.go('/hotspots/area/$gridId/mitigation'),
                     ),
                     const SizedBox(height: AppSpacing.xs),
                     Text(
@@ -99,16 +142,11 @@ class ContributingFactorsPage extends StatelessWidget {
           ],
         ),
         const SizedBox(height: AppSpacing.sm),
-        Text(
-          'Contributing Factors',
-          style: AppTextStyles.pageTitle,
-        ),
+        Text('Contributing Factors', style: AppTextStyles.pageTitle),
         const SizedBox(height: AppSpacing.xs),
         Text(
           'Environmental characteristics associated with the model prediction.',
-          style: AppTextStyles.caption.copyWith(
-            color: AppColors.textSecondary,
-          ),
+          style: AppTextStyles.caption.copyWith(color: AppColors.textSecondary),
         ),
       ],
     );
@@ -126,10 +164,7 @@ class _ShapTargetSummaryCard extends StatelessWidget {
       backgroundColor: AppColors.primary,
       borderColor: AppColors.primaryLight,
       gradient: const LinearGradient(
-        colors: [
-          AppColors.primary,
-          AppColors.primaryLight,
-        ],
+        colors: [AppColors.primary, AppColors.primaryLight],
         begin: Alignment.topLeft,
         end: Alignment.bottomRight,
       ),
@@ -215,7 +250,9 @@ class _ShapTargetSummaryCard extends StatelessWidget {
 }
 
 class _RelativeAssociationSection extends StatelessWidget {
-  const _RelativeAssociationSection();
+  const _RelativeAssociationSection({required this.factors});
+
+  final List<ShapFactor> factors;
 
   @override
   Widget build(BuildContext context) {
@@ -242,8 +279,8 @@ class _RelativeAssociationSection extends StatelessWidget {
         InfoCard(
           padding: AppSpacing.cardPaddingAll,
           child: Column(
-            children: List.generate(urbanHeatRepository.shapFactors.length, (index) {
-              final factor = urbanHeatRepository.shapFactors[index];
+            children: List.generate(factors.length, (index) {
+              final factor = factors[index];
               return FeatureBarRow(
                 label: factor.title,
                 percentage: factor.percentage,
@@ -259,7 +296,9 @@ class _RelativeAssociationSection extends StatelessWidget {
 }
 
 class _DetailedDimensionsSection extends StatelessWidget {
-  const _DetailedDimensionsSection();
+  const _DetailedDimensionsSection({required this.dimensions});
+
+  final List<ShapDimension> dimensions;
 
   @override
   Widget build(BuildContext context) {
@@ -290,8 +329,8 @@ class _DetailedDimensionsSection extends StatelessWidget {
           ),
         ),
         const SizedBox(height: AppSpacing.xs),
-        ...List.generate(urbanHeatRepository.shapDimensions.length, (index) {
-          final dim = urbanHeatRepository.shapDimensions[index];
+        ...List.generate(dimensions.length, (index) {
+          final dim = dimensions[index];
           return Padding(
             padding: const EdgeInsets.only(bottom: AppSpacing.sm),
             child: _DimensionDetailCard(

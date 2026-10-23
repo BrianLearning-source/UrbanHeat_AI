@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+
 import '../app/theme/app_colors.dart';
 import '../app/theme/app_spacing.dart';
 import '../app/theme/app_text_styles.dart';
-import '../data/repositories/urban_heat_repository.dart';
 import '../shared/widgets/app_top_bar.dart';
 import '../shared/widgets/buttons.dart';
 import '../shared/widgets/heat_spectrum_bar.dart';
@@ -13,7 +13,9 @@ import '../shared/widgets/placeholder_image.dart';
 import '../shared/widgets/section_title.dart';
 
 class HomePage extends StatelessWidget {
-  const HomePage({super.key});
+  const HomePage({super.key, required this.userName});
+
+  final String userName;
 
   @override
   Widget build(BuildContext context) {
@@ -32,7 +34,7 @@ class HomePage extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     const SizedBox(height: AppSpacing.xs),
-                    const _HomeGreetingHeader(),
+                    _HomeGreetingHeader(userName: userName),
                     const SizedBox(height: AppSpacing.md),
                     const _HeroOutlookCard(),
                     const SizedBox(height: AppSpacing.lg),
@@ -55,7 +57,9 @@ class HomePage extends StatelessWidget {
 }
 
 class _HomeGreetingHeader extends StatelessWidget {
-  const _HomeGreetingHeader();
+  const _HomeGreetingHeader({required this.userName});
+
+  final String userName;
 
   @override
   Widget build(BuildContext context) {
@@ -66,10 +70,7 @@ class _HomeGreetingHeader extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                'Good morning, ${urbanHeatRepository.userName}',
-                style: AppTextStyles.pageTitle,
-              ),
+              Text('Good morning, $userName', style: AppTextStyles.pageTitle),
               const SizedBox(height: AppSpacing.xs),
             ],
           ),
@@ -83,10 +84,7 @@ class _HomeGreetingHeader extends StatelessWidget {
               decoration: BoxDecoration(
                 color: AppColors.surface,
                 borderRadius: AppSpacing.roundedSm,
-                border: Border.all(
-                  color: AppColors.border,
-                  width: 1,
-                ),
+                border: Border.all(color: AppColors.border, width: 1),
               ),
               child: const Icon(
                 Icons.notifications_outlined,
@@ -122,10 +120,7 @@ class _HeroOutlookCard extends StatelessWidget {
       backgroundColor: AppColors.primary,
       borderColor: AppColors.primaryLight,
       gradient: const LinearGradient(
-        colors: [
-          AppColors.primary,
-          AppColors.primaryLight,
-        ],
+        colors: [AppColors.primary, AppColors.primaryLight],
         begin: Alignment.topLeft,
         end: Alignment.bottomRight,
       ),
@@ -135,9 +130,7 @@ class _HeroOutlookCard extends StatelessWidget {
           const SizedBox(height: AppSpacing.md),
           Text(
             'City-wide Heat\nOutlook (Kota\nMalang)',
-            style: AppTextStyles.pageTitle.copyWith(
-              color: AppColors.surface,
-            ),
+            style: AppTextStyles.pageTitle.copyWith(color: AppColors.surface),
           ),
           const SizedBox(height: AppSpacing.xs),
           Text(
@@ -263,37 +256,37 @@ class _LatestObservationCard extends StatelessWidget {
                 children: [
                   Expanded(
                     child: Row(
-                    children: [
-                      Container(
-                        width: AppSpacing.xl,
-                        height: AppSpacing.xl,
-                        decoration: BoxDecoration(
-                          color: AppColors.accent.withValues(alpha: 0.12),
-                          borderRadius: AppSpacing.roundedSm,
+                      children: [
+                        Container(
+                          width: AppSpacing.xl,
+                          height: AppSpacing.xl,
+                          decoration: BoxDecoration(
+                            color: AppColors.accent.withValues(alpha: 0.12),
+                            borderRadius: AppSpacing.roundedSm,
+                          ),
+                          child: const Icon(
+                            Icons.satellite_alt_rounded,
+                            color: AppColors.accent,
+                            size: AppSpacing.md,
+                          ),
                         ),
-                        child: const Icon(
-                          Icons.satellite_alt_rounded,
-                          color: AppColors.accent,
-                          size: AppSpacing.md,
-                        ),
-                      ),
-                      const SizedBox(width: AppSpacing.sm),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Satellite LST Prediction',
-                              style: AppTextStyles.caption.copyWith(
-                                color: AppColors.textSecondary,
+                        const SizedBox(width: AppSpacing.sm),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Satellite LST Prediction',
+                                style: AppTextStyles.caption.copyWith(
+                                  color: AppColors.textSecondary,
+                                ),
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
                               ),
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
                     ),
                   ),
                   const SizedBox(width: AppSpacing.xs),
@@ -464,11 +457,7 @@ class _QuickActionTile extends StatelessWidget {
               color: AppColors.accent.withValues(alpha: 0.12),
               borderRadius: AppSpacing.roundedSm,
             ),
-            child: Icon(
-              icon,
-              color: AppColors.accent,
-              size: AppSpacing.md,
-            ),
+            child: Icon(icon, color: AppColors.accent, size: AppSpacing.md),
           ),
           const SizedBox(width: AppSpacing.sm),
           Expanded(

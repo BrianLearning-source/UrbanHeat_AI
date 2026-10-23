@@ -1,22 +1,51 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+
 import '../app/theme/app_colors.dart';
 import '../app/theme/app_spacing.dart';
 import '../app/theme/app_text_styles.dart';
-import '../data/repositories/urban_heat_repository.dart';
-import '../data/models/urban_heat_models.dart';
+import '../features/urban_heat/domain/entities/mitigation.dart';
+import '../features/urban_heat/domain/repositories/urban_heat_repository.dart';
 import '../shared/widgets/app_top_bar.dart';
 import '../shared/widgets/buttons.dart';
 import '../shared/widgets/info_card.dart';
 import '../shared/widgets/placeholder_image.dart';
 
-class MitigationPage extends StatelessWidget {
+class MitigationPage extends StatefulWidget {
   final String gridId;
+  final UrbanHeatRepository repository;
 
   const MitigationPage({
     super.key,
     required this.gridId,
+    required this.repository,
   });
+
+  @override
+  State<MitigationPage> createState() => _MitigationPageState();
+}
+
+class _MitigationPageState extends State<MitigationPage> {
+  List<Mitigation> _mitigations = const [];
+  bool _loading = true;
+  bool _failed = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadMitigations();
+  }
+
+  Future<void> _loadMitigations() async {
+    final result = await widget.repository.getMitigations(widget.gridId);
+    if (!mounted) return;
+
+    setState(() {
+      _mitigations = result.data ?? const [];
+      _failed = result.failure != null;
+      _loading = false;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -41,10 +70,17 @@ class MitigationPage extends StatelessWidget {
                     const SizedBox(height: AppSpacing.md),
                     const _MitigationStatsRow(),
                     const SizedBox(height: AppSpacing.lg),
-                    ...urbanHeatRepository.mitigations.map((item) => Padding(
+                    if (_loading)
+                      const Center(child: CircularProgressIndicator())
+                    else if (_failed)
+                      const Text('Unable to load mitigation recommendations.')
+                    else
+                      ..._mitigations.map(
+                        (item) => Padding(
                           padding: const EdgeInsets.only(bottom: AppSpacing.md),
                           child: _MitigationItemCard(item: item),
-                        )),
+                        ),
+                      ),
                     const SizedBox(height: AppSpacing.md),
                     DarkButton(
                       label: 'Export Planning Summary (PDF)',
@@ -86,7 +122,7 @@ class MitigationPage extends StatelessWidget {
                 if (context.canPop()) {
                   context.pop();
                 } else {
-                  context.go('/hotspots/area/$gridId');
+                  context.go('/hotspots/area/${widget.gridId}');
                 }
               },
               borderRadius: AppSpacing.roundedSm,
@@ -101,10 +137,7 @@ class MitigationPage extends StatelessWidget {
                       size: AppSpacing.md,
                     ),
                     SizedBox(width: AppSpacing.xs),
-                    Text(
-                      'Back',
-                      style: TextStyle(fontWeight: FontWeight.w600),
-                    ),
+                    Text('Back', style: TextStyle(fontWeight: FontWeight.w600)),
                   ],
                 ),
               ),
@@ -112,16 +145,11 @@ class MitigationPage extends StatelessWidget {
           ],
         ),
         const SizedBox(height: AppSpacing.sm),
-        Text(
-          'Suggested Mitigation\nMeasures',
-          style: AppTextStyles.pageTitle,
-        ),
+        Text('Suggested Mitigation\nMeasures', style: AppTextStyles.pageTitle),
         const SizedBox(height: AppSpacing.xs),
         Text(
           'Informational strategies for areas with higher predicted Land Surface Temperature across Kota Malang.',
-          style: AppTextStyles.caption.copyWith(
-            color: AppColors.textSecondary,
-          ),
+          style: AppTextStyles.caption.copyWith(color: AppColors.textSecondary),
         ),
       ],
     );
@@ -274,7 +302,7 @@ class _MitigationStatsRow extends StatelessWidget {
 }
 
 class _MitigationItemCard extends StatelessWidget {
-  final MitigationItem item;
+  final Mitigation item;
 
   const _MitigationItemCard({required this.item});
 
@@ -295,8 +323,8 @@ class _MitigationItemCard extends StatelessWidget {
                 isGreening
                     ? Icons.park_rounded
                     : isRoofing
-                        ? Icons.roofing_rounded
-                        : Icons.layers_outlined,
+                    ? Icons.roofing_rounded
+                    : Icons.layers_outlined,
                 color: isGreening ? AppColors.mitigation : AppColors.primary,
                 size: AppSpacing.lg,
               ),
@@ -353,9 +381,7 @@ class _MitigationItemCard extends StatelessWidget {
           const SizedBox(height: AppSpacing.sm),
           Text(
             item.description,
-            style: AppTextStyles.body.copyWith(
-              color: AppColors.primary,
-            ),
+            style: AppTextStyles.body.copyWith(color: AppColors.primary),
           ),
           const SizedBox(height: AppSpacing.sm),
           if (isGreening)
@@ -376,10 +402,7 @@ class _MitigationItemCard extends StatelessWidget {
               decoration: BoxDecoration(
                 color: AppColors.background,
                 borderRadius: AppSpacing.roundedSm,
-                border: Border.all(
-                  color: AppColors.border,
-                  width: 1,
-                ),
+                border: Border.all(color: AppColors.border, width: 1),
               ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -448,53 +471,53 @@ class _MitigationItemCard extends StatelessWidget {
               child: ExpansionTile(
                 tilePadding: EdgeInsets.zero,
                 childrenPadding: const EdgeInsets.only(top: AppSpacing.xs),
-              leading: Icon(
-                Icons.check_circle_outline_rounded,
-                color: AppColors.mitigation,
-                size: AppSpacing.md,
-              ),
-              title: Text(
-                item.badge,
-                style: AppTextStyles.caption.copyWith(
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.primary,
+                leading: Icon(
+                  Icons.check_circle_outline_rounded,
+                  color: AppColors.mitigation,
+                  size: AppSpacing.md,
                 ),
-              ),
-              trailing: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    'Details',
-                    style: AppTextStyles.caption.copyWith(
-                      color: AppColors.textSecondary,
-                    ),
+                title: Text(
+                  item.badge,
+                  style: AppTextStyles.caption.copyWith(
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.primary,
                   ),
-                  const Icon(
-                    Icons.keyboard_arrow_down_rounded,
-                    color: AppColors.textSecondary,
-                    size: AppSpacing.md,
+                ),
+                trailing: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      'Details',
+                      style: AppTextStyles.caption.copyWith(
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                    const Icon(
+                      Icons.keyboard_arrow_down_rounded,
+                      color: AppColors.textSecondary,
+                      size: AppSpacing.md,
+                    ),
+                  ],
+                ),
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(AppSpacing.sm),
+                    decoration: BoxDecoration(
+                      color: AppColors.background,
+                      borderRadius: AppSpacing.roundedSm,
+                    ),
+                    child: Text(
+                      item.details,
+                      style: AppTextStyles.caption.copyWith(
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
                   ),
                 ],
               ),
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(AppSpacing.sm),
-                  decoration: BoxDecoration(
-                    color: AppColors.background,
-                    borderRadius: AppSpacing.roundedSm,
-                  ),
-                  child: Text(
-                    item.details,
-                    style: AppTextStyles.caption.copyWith(
-                      color: AppColors.textSecondary,
-                    ),
-                  ),
-                ),
-              ],
             ),
           ),
-        ),
-      ],
+        ],
       ),
     );
   }

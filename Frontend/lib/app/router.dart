@@ -15,12 +15,19 @@ import '../pages/edit_profile_page.dart';
 import '../pages/change_password_page.dart';
 import '../pages/splash_pages.dart';
 import '../pages/onboarding_pages.dart';
-import '../data/repositories/urban_heat_repository.dart';
+import '../data/repositories/urban_heat_repository.dart' as legacy_data;
+import '../features/urban_heat/data/repositories/mock_urban_heat_repository.dart';
+import '../features/urban_heat/domain/repositories/urban_heat_repository.dart';
 import '../shared/widgets/app_bottom_nav.dart';
 
 // Key ini memberi GoRouter akses ke navigator utama aplikasi.
-final GlobalKey<NavigatorState> _rootNavigatorKey =
-    GlobalKey<NavigatorState>(debugLabel: 'rootNavigator');
+final GlobalKey<NavigatorState> _rootNavigatorKey = GlobalKey<NavigatorState>(
+  debugLabel: 'rootNavigator',
+);
+
+// Feature dependencies are constructed here and passed into pages.
+final UrbanHeatRepository urbanHeatFeatureRepository =
+    const MockUrbanHeatRepository();
 
 final GoRouter appRouter = GoRouter(
   navigatorKey: _rootNavigatorKey,
@@ -42,7 +49,8 @@ final GoRouter appRouter = GoRouter(
       builder: (context, state) {
         final arguments = state.extra as EditProfileArguments?;
         return EditProfileScreen(
-          initialName: arguments?.name ?? urbanHeatRepository.userName,
+          initialName:
+              arguments?.name ?? legacy_data.urbanHeatRepository.userName,
           initialPhotoPath: arguments?.photoPath,
         );
       },
@@ -74,7 +82,8 @@ final GoRouter appRouter = GoRouter(
           routes: [
             GoRoute(
               path: '/home',
-              builder: (context, state) => const HomePage(),
+              builder: (context, state) =>
+                  HomePage(userName: legacy_data.urbanHeatRepository.userName),
             ),
           ],
         ),
@@ -98,7 +107,8 @@ final GoRouter appRouter = GoRouter(
           routes: [
             GoRoute(
               path: '/hotspots',
-              builder: (context, state) => const HotspotsPage(),
+              builder: (context, state) =>
+                  HotspotsPage(repository: urbanHeatFeatureRepository),
               routes: [
                 GoRoute(
                   path: 'area/:gridId',
@@ -111,15 +121,23 @@ final GoRouter appRouter = GoRouter(
                     GoRoute(
                       path: 'factors',
                       builder: (context, state) {
-                        final gridId = state.pathParameters['gridId'] ?? 'MC-204';
-                        return ContributingFactorsPage(gridId: gridId);
+                        final gridId =
+                            state.pathParameters['gridId'] ?? 'MC-204';
+                        return ContributingFactorsPage(
+                          gridId: gridId,
+                          repository: urbanHeatFeatureRepository,
+                        );
                       },
                     ),
                     GoRoute(
                       path: 'mitigation',
                       builder: (context, state) {
-                        final gridId = state.pathParameters['gridId'] ?? 'MC-204';
-                        return MitigationPage(gridId: gridId);
+                        final gridId =
+                            state.pathParameters['gridId'] ?? 'MC-204';
+                        return MitigationPage(
+                          gridId: gridId,
+                          repository: urbanHeatFeatureRepository,
+                        );
                       },
                     ),
                   ],

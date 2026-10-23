@@ -4,19 +4,25 @@ import 'package:go_router/go_router.dart';
 import '../app/theme/app_colors.dart';
 import '../app/theme/app_spacing.dart';
 import '../app/theme/app_text_styles.dart';
-import '../data/models/urban_heat_models.dart';
-import '../data/repositories/urban_heat_repository.dart';
+import '../features/urban_heat/domain/entities/hotspot.dart';
+import '../features/urban_heat/domain/repositories/urban_heat_repository.dart';
 import '../shared/widgets/app_top_bar.dart';
 import '../shared/widgets/info_card.dart';
 
 class HotspotsPage extends StatefulWidget {
-  const HotspotsPage({super.key});
+  const HotspotsPage({super.key, required this.repository});
+
+  final UrbanHeatRepository repository;
 
   @override
   State<HotspotsPage> createState() => _HotspotsPageState();
 }
 
 class _HotspotsPageState extends State<HotspotsPage> {
+  List<Hotspot> _hotspots = const [];
+  bool _loading = true;
+  bool _failed = false;
+
   int _selectedFilterIndex = 0;
   final List<String> _filters = const [
     'All',
@@ -24,6 +30,23 @@ class _HotspotsPageState extends State<HotspotsPage> {
     'Klojen',
     'Blimbing',
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadHotspots();
+  }
+
+  Future<void> _loadHotspots() async {
+    final result = await widget.repository.getHotspots();
+    if (!mounted) return;
+
+    setState(() {
+      _hotspots = result.data ?? const [];
+      _failed = result.failure != null;
+      _loading = false;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -48,16 +71,21 @@ class _HotspotsPageState extends State<HotspotsPage> {
                     const SizedBox(height: AppSpacing.md),
                     const _HotspotsMapOverview(),
                     const SizedBox(height: AppSpacing.lg),
-                    ...urbanHeatRepository.hotspots.map(
-                      (item) => Padding(
-                        padding: const EdgeInsets.only(bottom: AppSpacing.sm),
-                        child: _HotspotClusterCard(
-                          item: item,
-                          onInspect: () =>
-                              context.go('/hotspots/area/${item.gridId}'),
+                    if (_loading)
+                      const Center(child: CircularProgressIndicator())
+                    else if (_failed)
+                      const Text('Unable to load hotspots.')
+                    else
+                      ..._hotspots.map(
+                        (item) => Padding(
+                          padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+                          child: _HotspotClusterCard(
+                            item: item,
+                            onInspect: () =>
+                                context.go('/hotspots/area/${item.gridId}'),
+                          ),
                         ),
                       ),
-                    ),
                     const SizedBox(height: AppSpacing.sm),
                     SizedBox(
                       height: AppSpacing.xl + AppSpacing.lg,
@@ -269,7 +297,7 @@ class _MapClusterMarker extends StatelessWidget {
 class _HotspotClusterCard extends StatelessWidget {
   const _HotspotClusterCard({required this.item, required this.onInspect});
 
-  final HotspotItem item;
+  final Hotspot item;
   final VoidCallback onInspect;
 
   String get _title => switch (item.rank) {
