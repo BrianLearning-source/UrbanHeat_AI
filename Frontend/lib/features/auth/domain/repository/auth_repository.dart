@@ -3,6 +3,7 @@ import '../entities/app_user.dart';
 // Repository untuk mendifinisikan autentikasi yang dibutuhkan aplikasi
 abstract class AuthRepository {
   Future<AppUser?> signUp({
+    required String fullName,
     required String email,
     required String password,
   });

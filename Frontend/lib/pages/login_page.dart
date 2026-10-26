@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../app/theme/app_colors.dart';
 import '../app/theme/app_spacing.dart';
@@ -8,10 +9,7 @@ import '../features/auth/domain/repository/auth_repository.dart';
 import 'auth_widgets.dart';
 
 class LoginScreen extends StatefulWidget {
-  const LoginScreen({
-    super.key,
-    required this.authRepository,
-  });
+  const LoginScreen({super.key, required this.authRepository});
 
   final AuthRepository authRepository;
 
@@ -29,7 +27,9 @@ class _LoginScreenState extends State<LoginScreen>
   bool _isSubmiting = false;
   bool get _validEmail => _isValidEmail(_emailController.text.trim());
   bool get _canLogIn =>
-      _validEmail && (!_showPassword || _passwordController.text.length >= 8) && !_isSubmiting;
+      _validEmail &&
+      (!_showPassword || _passwordController.text.length >= 8) &&
+      !_isSubmiting;
 
   @override
   void initState() {
@@ -85,13 +85,32 @@ class _LoginScreenState extends State<LoginScreen>
       );
 
       // memastikan widget masih aktif sebelum melakukan navigasi
-      if(!mounted) return;
+      if (!mounted) return;
 
       context.go('/home');
-    } catch (e) {
-      // Handle login error
+    } on AuthException catch (error) {
+
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(error.message)));
+    } catch (error, stackTrace) {
+      // Error selain AuthException, misalnya masalah jaringan
+      // atau kesalahan lain pada proses login.
+      debugPrintStack(stackTrace: stackTrace);
+
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Login gagal. Periksa koneksi internet dan coba lagi.'),
+        ),
+      );
     } finally {
-      setState(() => _isSubmiting = false);
+      // Mematikan loading setelah proses selesai.
+      if (mounted) {
+        setState(() => _isSubmiting = false);
+      }
     }
   }
 
@@ -162,7 +181,7 @@ class _LoginScreenState extends State<LoginScreen>
                                 _showPassword || _passwordAnimation.isAnimating
                                 ? SizeTransition(
                                     sizeFactor: _passwordAnimation,
-                                    alignment : Alignment.topCenter,
+                                    alignment: Alignment.topCenter,
                                     child: FadeTransition(
                                       opacity: _passwordAnimation,
                                       child: Padding(

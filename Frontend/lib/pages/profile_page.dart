@@ -9,16 +9,23 @@ import '../app/theme/app_text_styles.dart';
 import '../data/repositories/urban_heat_repository.dart';
 import '../shared/widgets/app_top_bar.dart';
 import '../shared/widgets/info_card.dart';
+import '../features/auth/domain/repository/auth_repository.dart';
 import 'edit_profile_page.dart';
 
 class ProfilePage extends StatefulWidget {
-  const ProfilePage({super.key});
+  const ProfilePage({super.key, required this.authRepository});
+
+  // Dependency auth yang diberikan lewat router
+  final AuthRepository authRepository;
 
   @override
   State<ProfilePage> createState() => _ProfilePageState();
 }
 
 class _ProfilePageState extends State<ProfilePage> {
+  // variabel untuk menandai apakah logout sedang berlangsung
+  bool _isSigningOut = false;
+  
   late String _profileName;
   File? _profilePhoto;
 
@@ -27,6 +34,38 @@ class _ProfilePageState extends State<ProfilePage> {
     super.initState();
     _profileName = urbanHeatRepository.userName;
   }
+
+  // Mengakhiri sesi melalui repository, bukan hanya berpindah halaman.
+Future<void> _signOut() async {
+  // Cegah permintaan logout berulang.
+  if (_isSigningOut) return;
+
+  setState(() => _isSigningOut = true);
+
+  try {
+    // Supabase menghapus sesi autentikasi melalui repository.
+    await widget.authRepository.signOut();
+
+    // Router akan mendeteksi perubahan sesi dan mengarahkan
+    // pengguna yang sudah logout ke halaman Login.
+  } catch (error, stackTrace) {
+    debugPrintStack(stackTrace: stackTrace);
+
+    // Tampilkan pesan jika proses logout gagal.
+    if (!mounted) return;
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Logout gagal. Silakan coba lagi.'),
+      ),
+    );
+  } finally {
+    // Pulihkan status tombol selama halaman masih aktif.
+    if (mounted) {
+      setState(() => _isSigningOut = false);
+    }
+  }
+}
 
   Future<void> _openEditProfile() async {
     final result = await context.push<EditProfileResult>(
@@ -68,7 +107,7 @@ class _ProfilePageState extends State<ProfilePage> {
                     const SizedBox(height: AppSpacing.lg),
                     const _ProfileSettingsCard(),
                     const SizedBox(height: AppSpacing.lg),
-                    _SignOutButton(onPressed: () => context.go('/login')),
+                    _SignOutButton(onPressed: _isSigningOut ? null : _signOut,),
                   ],
                 ),
               ),
@@ -350,7 +389,7 @@ class _AppVersionLabel extends StatelessWidget {
 class _SignOutButton extends StatelessWidget {
   const _SignOutButton({required this.onPressed});
 
-  final VoidCallback onPressed;
+  final VoidCallback? onPressed;
 
   @override
   Widget build(BuildContext context) {

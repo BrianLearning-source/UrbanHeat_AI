@@ -1,13 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../app/theme/app_colors.dart';
 import '../app/theme/app_spacing.dart';
 import '../app/theme/app_text_styles.dart';
+import '../features/auth/domain/repository/auth_repository.dart';
 import 'auth_widgets.dart';
 
+// Halaman registrasi menerima dependency dari router
 class RegisterScreen extends StatefulWidget {
-  const RegisterScreen({super.key});
+  const RegisterScreen({super.key, required this.authRepository});
+
+  final AuthRepository authRepository;
 
   @override
   State<RegisterScreen> createState() => _RegisterScreenState();
@@ -84,14 +89,71 @@ class _RegisterScreenState extends State<RegisterScreen> {
     setState(() => _submitted = true);
     if (!_canSubmit) return;
 
+    // Tutup keyboard dan menampilkan indikator loading
+    FocusScope.of(context).unfocus();
     setState(() => _isSubmitting = true);
-    // TODO: connect to backend register endpoint when available.
-    await Future<void>.delayed(const Duration(seconds: 1));
-    if (!mounted) return;
-    setState(() => _isSubmitting = false);
-    ScaffoldMessenger.of(context)
-        .showSnackBar(const SnackBar(content: Text('Account created (demo)')));
-    context.go('/login');
+
+    try {
+      // Meminta repository mendaftarkan akun lewat Supabase Auth
+      final user = await widget.authRepository.signUp(
+        fullName: _nameController.text.trim(),
+        email: _emailController.text.trim(),
+        password: _passwordController.text,
+      );
+
+      if (!mounted) return;
+
+      // Supabase tidak mengembalikan user object saat pendaftaran berhasil, jadi kita hanya menampilkan pesan dan mengarahkan ke halaman login.
+      if (user == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'Registrasi diproses. Periksa email.'
+            ),
+          ),
+        );
+        context.go('/login');
+        return;
+      }
+
+    final hasSession = Supabase.instance.client.auth.currentSession != null;
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          hasSession
+            ? 'Akun berhasil dibuat. Memasuki dashboard'
+            : 'Akun berhasil dibuat. Periksa email untuk mengonfirmasi'
+        ),
+      ),
+    );
+
+    context.go(hasSession ? '/home' : '/login');
+    } catch (_) {
+      // Menampilkan handle error auth
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text(
+          'Registrasi gagal. Periksa koneksi dan coba lagi,'
+        ),
+        ),
+      );
+    } finally {
+      //Menghentikan loading selama halaman masih aktif
+      if (mounted) {
+        setState(() => _isSubmitting = false);
+      }
+    }
+
+    // setState(() => _isSubmitting = true);
+    // // TODO: connect to backend register endpoint when available.
+    // await Future<void>.delayed(const Duration(seconds: 1));
+    // if (!mounted) return;
+    // setState(() => _isSubmitting = false);
+    // ScaffoldMessenger.of(context)
+    //     .showSnackBar(const SnackBar(content: Text('Account created (demo)')));
+    // context.go('/login');
   }
 
   @override

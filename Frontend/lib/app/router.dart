@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -22,28 +23,88 @@ import '../features/auth/domain/repository/auth_repository.dart';
 import '../data/repositories/supabase_auth_repository.dart';
 
 // Key ini memberi GoRouter akses ke navigator utama aplikasi.
-final GlobalKey<NavigatorState> _rootNavigatorKey =
-    GlobalKey<NavigatorState>(debugLabel: 'rootNavigator');
+final GlobalKey<NavigatorState> _rootNavigatorKey = GlobalKey<NavigatorState>(
+  debugLabel: 'rootNavigator',
+);
 
 // Kunci ini memilih implementasi repository dan menyediakan dependency untuk halaman
 final AuthRepository authRepository = SupabaseAuthRepository(
   Supabase.instance.client,
 );
 
+class AuthRefreshNotifier extends ChangeNotifier {
+  AuthRefreshNotifier() {
+    // Memperhatikan login, logout serta perubahan sesi Supabase
+    _subscription = Supabase.instance.client.auth.onAuthStateChange.listen(
+      (_) {
+        notifyListeners();
+      },
+    );
+  }
+
+  // Menyimpan subscription agar bisa dhentikan ketika notifier dibuang
+  late final StreamSubscription<AuthState> _subscription;
+
+  @override
+  // Membersihkan subscription agar tidak terus berjalan setelah dibuang
+  void dispose() {
+    _subscription.cancel();
+    super.dispose();
+  }
+}
+
+final AuthRefreshNotifier _authRefreshNotifier = AuthRefreshNotifier();
+
 final GoRouter appRouter = GoRouter(
   navigatorKey: _rootNavigatorKey,
+
+  // Meminta GoRouter memeriksa ulang akses saat status autentikasi berubah.
+  refreshListenable: _authRefreshNotifier,
+  
   // Halaman pertama yang ditampilkan ketika aplikasi dibuka.
   initialLocation: '/splash',
+
+  // Menentukan halaman yang boleh diakses berdasarkan status login.
+  redirect: (context, state) {
+    // Sesi yang tersedia menandakan pengguna sedang login.
+    final isLoggedIn =
+        Supabase.instance.client.auth.currentSession != null;
+
+    // Halaman ini boleh dibuka tanpa login.
+    final isPublicRoute = state.matchedLocation == '/splash' ||
+        state.matchedLocation == '/onboarding';
+
+    // Pengguna belum login boleh membuka halaman Login/Register.
+    final isAuthRoute = state.matchedLocation == '/login' ||
+        state.matchedLocation == '/register';
+
+    // Pengguna belum login tidak boleh membuka halaman privat.
+    if (!isLoggedIn && !isPublicRoute && !isAuthRoute) {
+      return '/login';
+    }
+
+    // Pengguna yang sudah login tidak perlu kembali ke Login/Register.
+    if (isLoggedIn && isAuthRoute) {
+      return '/home';
+    }
+
+    // null berarti tidak perlu melakukan redirect.
+    return null;
+  },
+
   routes: [
     GoRoute(path: '/splash', builder: (context, state) => const SplashScreen()),
     GoRoute(
       path: '/onboarding',
       builder: (context, state) => const OnboardingScreen(),
     ),
-    GoRoute(path: '/login', builder: (context, state) => LoginScreen(authRepository: authRepository,),),
+    GoRoute(
+      path: '/login',
+      builder: (context, state) => LoginScreen(authRepository: authRepository),
+    ),
     GoRoute(
       path: '/register',
-      builder: (context, state) => const RegisterScreen(),
+      builder: (context, state) => RegisterScreen(authRepository: authRepository,),
     ),
     GoRoute(
       path: '/edit-profile',
@@ -119,14 +180,16 @@ final GoRouter appRouter = GoRouter(
                     GoRoute(
                       path: 'factors',
                       builder: (context, state) {
-                        final gridId = state.pathParameters['gridId'] ?? 'MC-204';
+                        final gridId =
+                            state.pathParameters['gridId'] ?? 'MC-204';
                         return ContributingFactorsPage(gridId: gridId);
                       },
                     ),
                     GoRoute(
                       path: 'mitigation',
                       builder: (context, state) {
-                        final gridId = state.pathParameters['gridId'] ?? 'MC-204';
+                        final gridId =
+                            state.pathParameters['gridId'] ?? 'MC-204';
                         return MitigationPage(gridId: gridId);
                       },
                     ),
@@ -141,7 +204,7 @@ final GoRouter appRouter = GoRouter(
           routes: [
             GoRoute(
               path: '/profile',
-              builder: (context, state) => const ProfilePage(),
+              builder: (context, state) => ProfilePage(authRepository: authRepository,),
             ),
           ],
         ),

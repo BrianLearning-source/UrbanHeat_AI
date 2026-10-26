@@ -22,15 +22,20 @@ class SupabaseAuthRepository implements AuthRepository {
   @override
   // Registrasi pengguna baru dengan email dan kata sandi
   Future<AppUser?> signUp({
+    required String fullName,
     required String email,
     required String password,
   }) async {
     final response = await _supabase.auth.signUp(
-      email: email,
+      email: email.trim(),
       password: password,
+
+      data: {
+        'full_name': fullName.trim(),
+      },
     );
 
-  // Mengganti hasil dari registrasi menjadi ke bentuk AppUser
+  // Mengubah objek User Supabase menjadi entity aplikasi
     return _mapUser(response.user);
   }
 
