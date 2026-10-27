@@ -1,13 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/app_spacing.dart';
 import '../../../../app/theme/app_text_styles.dart';
 import '../../../../shared/widgets/auth_widgets.dart';
+import '../../domain/repositories/auth_repository.dart';
 
 class RegisterScreen extends StatefulWidget {
-  const RegisterScreen({super.key});
+  const RegisterScreen({super.key, required this.authRepository});
+
+  final AuthRepository authRepository;
 
   @override
   State<RegisterScreen> createState() => _RegisterScreenState();
@@ -84,14 +88,49 @@ class _RegisterScreenState extends State<RegisterScreen> {
     setState(() => _submitted = true);
     if (!_canSubmit) return;
 
+    FocusScope.of(context).unfocus();
     setState(() => _isSubmitting = true);
-    // TODO: connect to backend register endpoint when available.
-    await Future<void>.delayed(const Duration(seconds: 1));
-    if (!mounted) return;
-    setState(() => _isSubmitting = false);
-    ScaffoldMessenger.of(context)
-        .showSnackBar(const SnackBar(content: Text('Account created (demo)')));
-    context.go('/login');
+    try {
+      final registeredUser = await widget.authRepository.signUp(
+        fullName: _nameController.text.trim(),
+        email: _emailController.text.trim(),
+        password: _passwordController.text,
+      );
+
+      if (!mounted) return;
+      if (registeredUser != null && widget.authRepository.isAuthenticated) {
+        context.go('/home');
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'Account created, but no active session was returned. '
+              'Confirm your email if required, then sign in.',
+            ),
+          ),
+        );
+        context.go('/login');
+      }
+    } on AuthException catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(error.message)));
+    } catch (error) {
+      debugPrint('Registration failed (${error.runtimeType}).');
+
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Registration failed. Check your connection and try again.',
+          ),
+        ),
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _isSubmitting = false);
+      }
+    }
   }
 
   @override
