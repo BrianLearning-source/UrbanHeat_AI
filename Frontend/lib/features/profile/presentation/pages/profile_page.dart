@@ -1,20 +1,28 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/app_spacing.dart';
 import '../../../../app/theme/app_text_styles.dart';
 import '../../domain/repositories/profile_repository.dart';
+import '../../../auth/domain/repositories/auth_repository.dart';
 import '../../../../shared/widgets/app_top_bar.dart';
 import '../../../../shared/widgets/info_card.dart';
 import 'edit_profile_page.dart';
 
 class ProfilePage extends StatefulWidget {
-  const ProfilePage({super.key, required this.repository});
+  const ProfilePage({
+    super.key,
+    required this.repository,
+    required this.authRepository,
+  });
 
   final ProfileRepository repository;
+  final AuthRepository authRepository;
 
   @override
   State<ProfilePage> createState() => _ProfilePageState();
@@ -23,6 +31,7 @@ class ProfilePage extends StatefulWidget {
 class _ProfilePageState extends State<ProfilePage> {
   late String _profileName;
   File? _profilePhoto;
+  bool _isSigningOut = false;
 
   @override
   void initState() {
@@ -43,6 +52,29 @@ class _ProfilePageState extends State<ProfilePage> {
       _profileName = result.name;
       _profilePhoto = result.photoPath == null ? null : File(result.photoPath!);
     });
+  }
+
+  Future<void> _signOut() async {
+    if (_isSigningOut) return;
+    setState(() => _isSigningOut = true);
+
+    try {
+      await widget.authRepository.signOut();
+      if (mounted) context.go('/login');
+    } on AuthException catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(error.message)));
+    } catch (error) {
+      debugPrint('Sign out failed (${error.runtimeType}).');
+
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Sign out failed. Please try again.')),
+      );
+    } finally {
+      if (mounted) setState(() => _isSigningOut = false);
+    }
   }
 
   @override
@@ -70,7 +102,10 @@ class _ProfilePageState extends State<ProfilePage> {
                     const SizedBox(height: AppSpacing.lg),
                     const _ProfileSettingsCard(),
                     const SizedBox(height: AppSpacing.lg),
-                    _SignOutButton(onPressed: () => context.go('/login')),
+                    _SignOutButton(
+                      onPressed: () => unawaited(_signOut()),
+                      isLoading: _isSigningOut,
+                    ),
                   ],
                 ),
               ),
@@ -350,9 +385,10 @@ class _AppVersionLabel extends StatelessWidget {
 }
 
 class _SignOutButton extends StatelessWidget {
-  const _SignOutButton({required this.onPressed});
+  const _SignOutButton({required this.onPressed, required this.isLoading});
 
   final VoidCallback onPressed;
+  final bool isLoading;
 
   @override
   Widget build(BuildContext context) {
@@ -360,7 +396,7 @@ class _SignOutButton extends StatelessWidget {
       color: AppColors.surface,
       borderRadius: AppSpacing.roundedSm,
       child: InkWell(
-        onTap: onPressed,
+        onTap: isLoading ? null : onPressed,
         borderRadius: AppSpacing.roundedSm,
         child: Container(
           height: 54,
@@ -371,11 +407,18 @@ class _SignOutButton extends StatelessWidget {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(
-                Icons.logout_rounded,
-                color: AppColors.heatHigh,
-                size: AppSpacing.md,
-              ),
+              if (isLoading)
+                const SizedBox(
+                  width: AppSpacing.md,
+                  height: AppSpacing.md,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                )
+              else
+                const Icon(
+                  Icons.logout_rounded,
+                  color: AppColors.heatHigh,
+                  size: AppSpacing.md,
+                ),
               const SizedBox(width: AppSpacing.xs),
               Text(
                 'Sign Out',

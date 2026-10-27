@@ -22,16 +22,14 @@ Future<void> main() async {
     await bootstrap();
     runApp(const UrbanHeatApp());
   } catch (error, stackTrace) {
-    debugPrint('UrbanHeat AI startup failed: $error');
+    debugPrint('UrbanHeat AI startup failed. See the stack trace for details.');
     debugPrintStack(stackTrace: stackTrace);
-    runApp(_StartupErrorApp(error: error));
+    runApp(const _StartupErrorApp());
   }
 }
 
 class _StartupErrorApp extends StatelessWidget {
-  const _StartupErrorApp({required this.error});
-
-  final Object error;
+  const _StartupErrorApp();
 
   @override
   Widget build(BuildContext context) {
@@ -43,7 +41,8 @@ class _StartupErrorApp extends StatelessWidget {
             child: Padding(
               padding: const EdgeInsets.all(24),
               child: Text(
-                'UrbanHeat AI could not start. Check your .env configuration.\n\n$error',
+                'UrbanHeat AI could not start. Check the Supabase '
+                'configuration and try again.',
                 textAlign: TextAlign.center,
               ),
             ),

@@ -1,13 +1,22 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/app_spacing.dart';
 import '../../../../app/theme/app_text_styles.dart';
 import '../../../../shared/widgets/auth_widgets.dart';
+import '../../domain/repositories/auth_repository.dart';
 
 class LoginScreen extends StatefulWidget {
-  const LoginScreen({super.key});
+  const LoginScreen({
+    super.key,
+    required this.authRepository,
+    this.redirectLocation,
+  });
+
+  final AuthRepository authRepository;
+  final String? redirectLocation;
 
   @override
   State<LoginScreen> createState() => _LoginScreenState();
@@ -20,10 +29,11 @@ class _LoginScreenState extends State<LoginScreen>
   late final AnimationController _passwordAnimation;
   bool _showPassword = false;
   bool _obscurePassword = true;
+  bool _isSubmitting = false;
 
   bool get _validEmail => _isValidEmail(_emailController.text.trim());
   bool get _canLogIn =>
-      _validEmail && (!_showPassword || _passwordController.text.length >= 8);
+      _validEmail && _passwordController.text.isNotEmpty && !_isSubmitting;
 
   @override
   void initState() {
@@ -64,9 +74,73 @@ class _LoginScreenState extends State<LoginScreen>
     }
   }
 
-  void _logIn() {
+  Future<void> _logIn() async {
     if (!_canLogIn) return;
-    // TODO: connect to backend email+password login endpoint when available.
+
+    FocusScope.of(context).unfocus();
+    setState(() => _isSubmitting = true);
+
+    try {
+      await widget.authRepository.signIn(
+        email: _emailController.text.trim(),
+        password: _passwordController.text,
+      );
+
+      if (!mounted) return;
+      if (!widget.authRepository.isAuthenticated) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'Login did not create an active session. Please try again.',
+            ),
+          ),
+        );
+        return;
+      }
+
+      context.go(_safeRedirectLocation);
+    } on AuthException catch (error) {
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(error.message)));
+    } catch (error) {
+      debugPrint('Login failed (${error.runtimeType}).');
+
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Login gagal. Periksa koneksi internet dan coba lagi.'),
+        ),
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _isSubmitting = false);
+      }
+    }
+  }
+
+  String get _safeRedirectLocation {
+    final location = widget.redirectLocation;
+    if (location == null) return '/home';
+
+    final uri = Uri.tryParse(location);
+    if (uri == null ||
+        uri.hasScheme ||
+        uri.hasAuthority ||
+        !uri.path.startsWith('/') ||
+        uri.path.startsWith('//') ||
+        const {
+          '/login',
+          '/register',
+          '/splash',
+          '/onboarding',
+        }.contains(uri.path)) {
+      return '/home';
+    }
+
+    return location;
   }
 
   void _signInWithGoogle() {
@@ -97,9 +171,13 @@ class _LoginScreenState extends State<LoginScreen>
                               color: AppColors.surface,
                               borderRadius: AppSpacing.roundedSm,
                               child: InkWell(
-                                onTap: () => context.canPop()
-                                    ? context.pop()
-                                    : context.go('/home'),
+                                onTap: () {
+                                  if (context.canPop()) {
+                                    context.pop();
+                                  } else {
+                                    context.go('/onboarding');
+                                  }
+                                },
                                 borderRadius: AppSpacing.roundedSm,
                                 child: const SizedBox(
                                   width: 40,
@@ -226,7 +304,16 @@ class _LoginScreenState extends State<LoginScreen>
                                   fontWeight: FontWeight.w600,
                                 ),
                               ),
-                              child: const Text('Log in'),
+                              child: _isSubmitting
+                                  ? const SizedBox(
+                                      width: 20,
+                                      height: 20,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                        color: AppColors.surface,
+                                      ),
+                                    )
+                                  : const Text('Log in'),
                             ),
                           ),
                           const SizedBox(height: AppSpacing.lg),

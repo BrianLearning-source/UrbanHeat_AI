@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+
 import 'router.dart';
 import 'theme/app_theme.dart';
 
 class UrbanHeatApp extends StatelessWidget {
-  const UrbanHeatApp({super.key});
+  const UrbanHeatApp({super.key, this.router});
+
+  final GoRouter? router;
 
   @override
   Widget build(BuildContext context) {
@@ -12,7 +16,7 @@ class UrbanHeatApp extends StatelessWidget {
       title: 'UrbanHeat AI',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
-      routerConfig: appRouter,
+      routerConfig: router ?? appRouter,
     );
   }
 }
