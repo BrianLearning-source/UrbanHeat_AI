@@ -1,3 +1,5 @@
 # Vs code personal settings
 .vscode/
 .DS_Store
+# Node.js dependencies
+node_modules/
