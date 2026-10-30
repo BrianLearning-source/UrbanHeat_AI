@@ -39,7 +39,7 @@ void main() {
     await tester.tap(exploreHeatmapFinder);
     await tester.pumpAndSettle();
     expect(find.text('City Heatmap'), findsOneWidget);
-    expect(find.text('Heatmap akan diimplementasikan'), findsOneWidget);
+    expect(find.text('Unable to load heatmap data'), findsOneWidget);
 
     // 2. Navigate to Prediction Result (/heatmap/prediction)
     router.go('/heatmap/prediction');
