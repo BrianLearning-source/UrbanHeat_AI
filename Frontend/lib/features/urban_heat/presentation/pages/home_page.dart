@@ -76,35 +76,46 @@ class _HomeGreetingHeader extends StatelessWidget {
           ),
         ),
         const SizedBox(width: AppSpacing.sm),
-        Stack(
-          children: [
-            Container(
+        Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: () => context.push('/notifications'),
+            borderRadius: AppSpacing.roundedSm,
+            child: SizedBox(
               width: AppSpacing.xl,
               height: AppSpacing.xl,
-              decoration: BoxDecoration(
-                color: AppColors.surface,
-                borderRadius: AppSpacing.roundedSm,
-                border: Border.all(color: AppColors.border, width: 1),
-              ),
-              child: const Icon(
-                Icons.notifications_outlined,
-                color: AppColors.primary,
-                size: AppSpacing.md,
+              child: Stack(
+                children: [
+                  Container(
+                    width: AppSpacing.xl,
+                    height: AppSpacing.xl,
+                    decoration: BoxDecoration(
+                      color: AppColors.surface,
+                      borderRadius: AppSpacing.roundedSm,
+                      border: Border.all(color: AppColors.border, width: 1),
+                    ),
+                    child: const Icon(
+                      Icons.notifications_outlined,
+                      color: AppColors.primary,
+                      size: AppSpacing.md,
+                    ),
+                  ),
+                  Positioned(
+                    right: AppSpacing.xs,
+                    top: AppSpacing.xs,
+                    child: Container(
+                      width: AppSpacing.xs,
+                      height: AppSpacing.xs,
+                      decoration: const BoxDecoration(
+                        color: AppColors.accent,
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
-            Positioned(
-              right: AppSpacing.xs,
-              top: AppSpacing.xs,
-              child: Container(
-                width: AppSpacing.xs,
-                height: AppSpacing.xs,
-                decoration: const BoxDecoration(
-                  color: AppColors.accent,
-                  shape: BoxShape.circle,
-                ),
-              ),
-            ),
-          ],
+          ),
         ),
       ],
     );
@@ -403,29 +414,40 @@ class _QuickActionsSection extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        const SectionTitle(title: 'Quick Actions'),
-        const SizedBox(height: AppSpacing.xs),
-        _QuickActionTile(
-          icon: Icons.map_outlined,
-          title: 'City Heatmap',
-          subtitle: 'Explore predicted LST across Kota Malang.',
-          onTap: () => context.go('/heatmap'),
-        ),
-        const SizedBox(height: AppSpacing.xs),
-        _QuickActionTile(
-          icon: Icons.local_fire_department_outlined,
-          title: 'Potential Hotspots',
-          subtitle: 'View high heat intensity areas.',
-          onTap: () => context.go('/hotspots'),
-        ),
-        const SizedBox(height: AppSpacing.xs),
-        _QuickActionTile(
-          icon: Icons.grid_view_rounded,
-          title: 'Area Detail',
-          subtitle: 'Inspect selected grid & indicators.',
-          onTap: () => context.go('/hotspots/area/MC-204'),
-        ),
-      ],
+  const SectionTitle(title: 'Quick Actions'),
+  const SizedBox(height: AppSpacing.xs),
+
+  _QuickActionTile(
+    icon: Icons.map_outlined,
+    title: 'City Heatmap',
+    subtitle: 'Explore predicted LST across Kota Malang.',
+    onTap: () => context.go('/heatmap'),
+  ),
+
+  const SizedBox(height: AppSpacing.xs),
+  _QuickActionTile(
+    icon: Icons.local_fire_department_outlined,
+    title: 'Potential Hotspots',
+    subtitle: 'View high heat intensity areas.',
+    onTap: () => context.go('/hotspots'),
+  ),
+
+  const SizedBox(height: AppSpacing.xs),
+  _QuickActionTile(
+    icon: Icons.grid_view_rounded,
+    title: 'Area Detail',
+    subtitle: 'Inspect selected grid & indicators.',
+    onTap: () => context.go('/hotspots/area/MC-204'),
+  ),
+
+  const SizedBox(height: AppSpacing.xs),
+  _QuickActionTile(
+    icon: Icons.event_note_rounded,
+    title: 'Planning',
+    subtitle: 'Manage your heat mitigation plans and activities.',
+    onTap: () => context.push('/planning'),
+  ),
+],
     );
   }
 }

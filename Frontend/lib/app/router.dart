@@ -11,6 +11,8 @@ import '../features/urban_heat/presentation/pages/area_detail_page.dart';
 import '../features/urban_heat/presentation/pages/contributing_factors_page.dart';
 import '../features/urban_heat/presentation/pages/hotspots_page.dart';
 import '../features/urban_heat/presentation/pages/mitigation_page.dart';
+import '../features/urban_heat/presentation/pages/notification_center_page.dart';
+import '../features/urban_heat/presentation/pages/planning_page.dart';
 import '../features/profile/presentation/pages/profile_page.dart';
 import '../features/auth/presentation/pages/login_page.dart';
 import '../features/auth/presentation/pages/register_page.dart';
@@ -112,6 +114,14 @@ GoRouter createAppRouter({required AuthRepository authRepository}) {
       GoRoute(
         path: '/change-password',
         builder: (context, state) => const ChangePasswordScreen(),
+      ),
+      GoRoute(
+        path: '/notifications',
+        builder: (context, state) => const NotificationCenterPage(),
+      ),
+      GoRoute(
+        path: '/planning',
+        builder: (context, state) => const PlanningPage(),
       ),
       GoRoute(path: '/', redirect: (_, _) => '/splash'),
       // Tiap tab punya riwayat sendiri; indexedStack menjaga tab lain tetap tersimpan.
