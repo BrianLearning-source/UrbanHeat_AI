@@ -76,35 +76,46 @@ class _HomeGreetingHeader extends StatelessWidget {
           ),
         ),
         const SizedBox(width: AppSpacing.sm),
-        Stack(
-          children: [
-            Container(
+        Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: () => context.push('/notifications'),
+            borderRadius: AppSpacing.roundedSm,
+            child: SizedBox(
               width: AppSpacing.xl,
               height: AppSpacing.xl,
-              decoration: BoxDecoration(
-                color: AppColors.surface,
-                borderRadius: AppSpacing.roundedSm,
-                border: Border.all(color: AppColors.border, width: 1),
-              ),
-              child: const Icon(
-                Icons.notifications_outlined,
-                color: AppColors.primary,
-                size: AppSpacing.md,
+              child: Stack(
+                children: [
+                  Container(
+                    width: AppSpacing.xl,
+                    height: AppSpacing.xl,
+                    decoration: BoxDecoration(
+                      color: AppColors.surface,
+                      borderRadius: AppSpacing.roundedSm,
+                      border: Border.all(color: AppColors.border, width: 1),
+                    ),
+                    child: const Icon(
+                      Icons.notifications_outlined,
+                      color: AppColors.primary,
+                      size: AppSpacing.md,
+                    ),
+                  ),
+                  Positioned(
+                    right: AppSpacing.xs,
+                    top: AppSpacing.xs,
+                    child: Container(
+                      width: AppSpacing.xs,
+                      height: AppSpacing.xs,
+                      decoration: const BoxDecoration(
+                        color: AppColors.accent,
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
-            Positioned(
-              right: AppSpacing.xs,
-              top: AppSpacing.xs,
-              child: Container(
-                width: AppSpacing.xs,
-                height: AppSpacing.xs,
-                decoration: const BoxDecoration(
-                  color: AppColors.accent,
-                  shape: BoxShape.circle,
-                ),
-              ),
-            ),
-          ],
+          ),
         ),
       ],
     );
