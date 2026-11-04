@@ -414,29 +414,40 @@ class _QuickActionsSection extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        const SectionTitle(title: 'Quick Actions'),
-        const SizedBox(height: AppSpacing.xs),
-        _QuickActionTile(
-          icon: Icons.map_outlined,
-          title: 'City Heatmap',
-          subtitle: 'Explore predicted LST across Kota Malang.',
-          onTap: () => context.go('/heatmap'),
-        ),
-        const SizedBox(height: AppSpacing.xs),
-        _QuickActionTile(
-          icon: Icons.local_fire_department_outlined,
-          title: 'Potential Hotspots',
-          subtitle: 'View high heat intensity areas.',
-          onTap: () => context.go('/hotspots'),
-        ),
-        const SizedBox(height: AppSpacing.xs),
-        _QuickActionTile(
-          icon: Icons.grid_view_rounded,
-          title: 'Area Detail',
-          subtitle: 'Inspect selected grid & indicators.',
-          onTap: () => context.go('/hotspots/area/MC-204'),
-        ),
-      ],
+  const SectionTitle(title: 'Quick Actions'),
+  const SizedBox(height: AppSpacing.xs),
+
+  _QuickActionTile(
+    icon: Icons.map_outlined,
+    title: 'City Heatmap',
+    subtitle: 'Explore predicted LST across Kota Malang.',
+    onTap: () => context.go('/heatmap'),
+  ),
+
+  const SizedBox(height: AppSpacing.xs),
+  _QuickActionTile(
+    icon: Icons.local_fire_department_outlined,
+    title: 'Potential Hotspots',
+    subtitle: 'View high heat intensity areas.',
+    onTap: () => context.go('/hotspots'),
+  ),
+
+  const SizedBox(height: AppSpacing.xs),
+  _QuickActionTile(
+    icon: Icons.grid_view_rounded,
+    title: 'Area Detail',
+    subtitle: 'Inspect selected grid & indicators.',
+    onTap: () => context.go('/hotspots/area/MC-204'),
+  ),
+
+  const SizedBox(height: AppSpacing.xs),
+  _QuickActionTile(
+    icon: Icons.event_note_rounded,
+    title: 'Planning',
+    subtitle: 'Manage your heat mitigation plans and activities.',
+    onTap: () => context.push('/planning'),
+  ),
+],
     );
   }
 }
