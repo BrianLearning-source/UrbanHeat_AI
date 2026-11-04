@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+
 import '../app/theme/app_colors.dart';
 import '../app/theme/app_spacing.dart';
 import '../app/theme/app_text_styles.dart';
+import '../data/repositories/notification_repository.dart';
 import '../data/repositories/urban_heat_repository.dart';
+import '../shared/widgets/animated_interaction.dart';
 import '../shared/widgets/app_top_bar.dart';
 import '../shared/widgets/buttons.dart';
 import '../shared/widgets/heat_spectrum_bar.dart';
@@ -54,8 +57,21 @@ class HomePage extends StatelessWidget {
   }
 }
 
-class _HomeGreetingHeader extends StatelessWidget {
+class _HomeGreetingHeader extends StatefulWidget {
   const _HomeGreetingHeader();
+
+  @override
+  State<_HomeGreetingHeader> createState() => _HomeGreetingHeaderState();
+}
+
+class _HomeGreetingHeaderState extends State<_HomeGreetingHeader> {
+  late Future<int> _unreadCountFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _unreadCountFuture = notificationRepository.getUnreadCount();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -75,38 +91,89 @@ class _HomeGreetingHeader extends StatelessWidget {
           ),
         ),
         const SizedBox(width: AppSpacing.sm),
-        Stack(
-          children: [
-            Container(
-              width: AppSpacing.xl,
-              height: AppSpacing.xl,
-              decoration: BoxDecoration(
-                color: AppColors.surface,
+        FutureBuilder<int>(
+          future: _unreadCountFuture,
+          builder: (context, snapshot) {
+            final unreadCount = snapshot.data ?? 0;
+            return PressScale(
+              elevation: 1,
+              shadowColor: AppColors.primary.withValues(alpha: 0.1),
+              borderRadius: AppSpacing.roundedSm,
+              child: InkWell(
+                onTap: () => context.go('/notifications'),
                 borderRadius: AppSpacing.roundedSm,
-                border: Border.all(
-                  color: AppColors.border,
-                  width: 1,
+                child: Stack(
+                  children: [
+                    Container(
+                      width: AppSpacing.xl,
+                      height: AppSpacing.xl,
+                      decoration: BoxDecoration(
+                        color: AppColors.surface,
+                        borderRadius: AppSpacing.roundedSm,
+                        border: Border.all(color: AppColors.border, width: 1),
+                      ),
+                      child: const Icon(
+                        Icons.notifications_outlined,
+                        color: AppColors.primary,
+                        size: AppSpacing.md,
+                      ),
+                    ),
+                    Positioned(
+                      right: 2,
+                      top: 2,
+                      child: AnimatedSwitcher(
+                        duration: MediaQuery.disableAnimationsOf(context)
+                            ? Duration.zero
+                            : const Duration(milliseconds: 240),
+                        switchInCurve: Curves.easeOutCubic,
+                        switchOutCurve: Curves.easeInOut,
+                        transitionBuilder: (child, animation) =>
+                            FadeTransition(
+                              opacity: animation,
+                              child: ScaleTransition(
+                                scale: animation,
+                                child: child,
+                              ),
+                            ),
+                        child: unreadCount > 0
+                            ? Container(
+                                key: ValueKey(
+                                  unreadCount > 9 ? '9+' : unreadCount,
+                                ),
+                                constraints: const BoxConstraints(
+                                  minWidth: 16,
+                                  minHeight: 16,
+                                ),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 4,
+                                ),
+                                decoration: const BoxDecoration(
+                                  color: AppColors.accent,
+                                  shape: BoxShape.circle,
+                                ),
+                                child: Center(
+                                  child: Text(
+                                    unreadCount > 9
+                                        ? '9+'
+                                        : unreadCount.toString(),
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 9,
+                                      fontWeight: FontWeight.w700,
+                                    ),
+                                  ),
+                                ),
+                              )
+                            : const SizedBox.shrink(
+                                key: ValueKey('no-unread-badge'),
+                              ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
-              child: const Icon(
-                Icons.notifications_outlined,
-                color: AppColors.primary,
-                size: AppSpacing.md,
-              ),
-            ),
-            Positioned(
-              right: AppSpacing.xs,
-              top: AppSpacing.xs,
-              child: Container(
-                width: AppSpacing.xs,
-                height: AppSpacing.xs,
-                decoration: const BoxDecoration(
-                  color: AppColors.accent,
-                  shape: BoxShape.circle,
-                ),
-              ),
-            ),
-          ],
+            );
+          },
         ),
       ],
     );
@@ -122,10 +189,7 @@ class _HeroOutlookCard extends StatelessWidget {
       backgroundColor: AppColors.primary,
       borderColor: AppColors.primaryLight,
       gradient: const LinearGradient(
-        colors: [
-          AppColors.primary,
-          AppColors.primaryLight,
-        ],
+        colors: [AppColors.primary, AppColors.primaryLight],
         begin: Alignment.topLeft,
         end: Alignment.bottomRight,
       ),
@@ -135,9 +199,7 @@ class _HeroOutlookCard extends StatelessWidget {
           const SizedBox(height: AppSpacing.md),
           Text(
             'City-wide Heat\nOutlook (Kota\nMalang)',
-            style: AppTextStyles.pageTitle.copyWith(
-              color: AppColors.surface,
-            ),
+            style: AppTextStyles.pageTitle.copyWith(color: AppColors.surface),
           ),
           const SizedBox(height: AppSpacing.xs),
           Text(
@@ -263,37 +325,37 @@ class _LatestObservationCard extends StatelessWidget {
                 children: [
                   Expanded(
                     child: Row(
-                    children: [
-                      Container(
-                        width: AppSpacing.xl,
-                        height: AppSpacing.xl,
-                        decoration: BoxDecoration(
-                          color: AppColors.accent.withValues(alpha: 0.12),
-                          borderRadius: AppSpacing.roundedSm,
+                      children: [
+                        Container(
+                          width: AppSpacing.xl,
+                          height: AppSpacing.xl,
+                          decoration: BoxDecoration(
+                            color: AppColors.accent.withValues(alpha: 0.12),
+                            borderRadius: AppSpacing.roundedSm,
+                          ),
+                          child: const Icon(
+                            Icons.satellite_alt_rounded,
+                            color: AppColors.accent,
+                            size: AppSpacing.md,
+                          ),
                         ),
-                        child: const Icon(
-                          Icons.satellite_alt_rounded,
-                          color: AppColors.accent,
-                          size: AppSpacing.md,
-                        ),
-                      ),
-                      const SizedBox(width: AppSpacing.sm),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Satellite LST Prediction',
-                              style: AppTextStyles.caption.copyWith(
-                                color: AppColors.textSecondary,
+                        const SizedBox(width: AppSpacing.sm),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Satellite LST Prediction',
+                                style: AppTextStyles.caption.copyWith(
+                                  color: AppColors.textSecondary,
+                                ),
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
                               ),
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
                     ),
                   ),
                   const SizedBox(width: AppSpacing.xs),
@@ -432,6 +494,13 @@ class _QuickActionsSection extends StatelessWidget {
           subtitle: 'Inspect selected grid & indicators.',
           onTap: () => context.go('/hotspots/area/MC-204'),
         ),
+        const SizedBox(height: AppSpacing.xs),
+        _QuickActionTile(
+          icon: Icons.event_note_outlined,
+          title: 'Plan & Reminders',
+          subtitle: 'Review upcoming actions and cool-down planning.',
+          onTap: () => context.go('/planning'),
+        ),
       ],
     );
   }
@@ -452,51 +521,52 @@ class _QuickActionTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return InfoCard(
-      onTap: onTap,
-      padding: const EdgeInsets.all(AppSpacing.sm),
-      child: Row(
-        children: [
-          Container(
-            width: AppSpacing.xl,
-            height: AppSpacing.xl,
-            decoration: BoxDecoration(
-              color: AppColors.accent.withValues(alpha: 0.12),
-              borderRadius: AppSpacing.roundedSm,
+    return PressScale(
+      elevation: 1.5,
+      shadowColor: AppColors.primary.withValues(alpha: 0.12),
+      borderRadius: AppSpacing.roundedMd,
+      child: InfoCard(
+        onTap: onTap,
+        padding: const EdgeInsets.all(AppSpacing.sm),
+        child: Row(
+          children: [
+            Container(
+              width: AppSpacing.xl,
+              height: AppSpacing.xl,
+              decoration: BoxDecoration(
+                color: AppColors.accent.withValues(alpha: 0.12),
+                borderRadius: AppSpacing.roundedSm,
+              ),
+              child: Icon(icon, color: AppColors.accent, size: AppSpacing.md),
             ),
-            child: Icon(
-              icon,
-              color: AppColors.accent,
-              size: AppSpacing.md,
-            ),
-          ),
-          const SizedBox(width: AppSpacing.sm),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  title,
-                  style: AppTextStyles.body.copyWith(
-                    fontWeight: FontWeight.w600,
+            const SizedBox(width: AppSpacing.sm),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    title,
+                    style: AppTextStyles.body.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
-                ),
-                Text(
-                  subtitle,
-                  style: AppTextStyles.caption.copyWith(
-                    color: AppColors.textSecondary,
+                  Text(
+                    subtitle,
+                    style: AppTextStyles.caption.copyWith(
+                      color: AppColors.textSecondary,
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
-          const Icon(
-            Icons.chevron_right_rounded,
-            color: AppColors.textSecondary,
-            size: AppSpacing.lg,
-          ),
-        ],
+            const Icon(
+              Icons.chevron_right_rounded,
+              color: AppColors.textSecondary,
+              size: AppSpacing.lg,
+            ),
+          ],
+        ),
       ),
     );
   }

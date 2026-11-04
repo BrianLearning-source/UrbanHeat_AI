@@ -15,12 +15,15 @@ import '../pages/edit_profile_page.dart';
 import '../pages/change_password_page.dart';
 import '../pages/splash_pages.dart';
 import '../pages/onboarding_pages.dart';
+import '../pages/notification_center_page.dart';
+import '../pages/planning_page.dart';
 import '../data/repositories/urban_heat_repository.dart';
 import '../shared/widgets/app_bottom_nav.dart';
 
 // Key ini memberi GoRouter akses ke navigator utama aplikasi.
-final GlobalKey<NavigatorState> _rootNavigatorKey =
-    GlobalKey<NavigatorState>(debugLabel: 'rootNavigator');
+final GlobalKey<NavigatorState> _rootNavigatorKey = GlobalKey<NavigatorState>(
+  debugLabel: 'rootNavigator',
+);
 
 final GoRouter appRouter = GoRouter(
   navigatorKey: _rootNavigatorKey,
@@ -50,6 +53,14 @@ final GoRouter appRouter = GoRouter(
     GoRoute(
       path: '/change-password',
       builder: (context, state) => const ChangePasswordScreen(),
+    ),
+    GoRoute(
+      path: '/notifications',
+      builder: (context, state) => const NotificationCenterPage(),
+    ),
+    GoRoute(
+      path: '/planning',
+      builder: (context, state) => const PlanningPage(),
     ),
     GoRoute(path: '/', redirect: (_, _) => '/splash'),
     // Tiap tab punya riwayat sendiri; indexedStack menjaga tab lain tetap tersimpan.
@@ -111,14 +122,16 @@ final GoRouter appRouter = GoRouter(
                     GoRoute(
                       path: 'factors',
                       builder: (context, state) {
-                        final gridId = state.pathParameters['gridId'] ?? 'MC-204';
+                        final gridId =
+                            state.pathParameters['gridId'] ?? 'MC-204';
                         return ContributingFactorsPage(gridId: gridId);
                       },
                     ),
                     GoRoute(
                       path: 'mitigation',
                       builder: (context, state) {
-                        final gridId = state.pathParameters['gridId'] ?? 'MC-204';
+                        final gridId =
+                            state.pathParameters['gridId'] ?? 'MC-204';
                         return MitigationPage(gridId: gridId);
                       },
                     ),
