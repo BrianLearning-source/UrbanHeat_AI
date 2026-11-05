@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 
+import '../../domain/repositories/profile_repository.dart';
 import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/app_spacing.dart';
 import '../../../../app/theme/app_text_styles.dart';
@@ -28,10 +29,12 @@ class EditProfileScreen extends StatefulWidget {
   const EditProfileScreen({
     super.key,
     required this.initialName,
+    required this.repository,
     this.initialPhotoPath,
   });
 
   final String initialName;
+  final ProfileRepository repository;
   final String? initialPhotoPath;
 
   @override
@@ -163,16 +166,34 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     if (!_hasChanges || !_nameValid) return;
 
     setState(() => _isSaving = true);
-    // TODO: connect to backend update-profile endpoint when available.
-    await Future<void>.delayed(const Duration(seconds: 1));
-    if (!mounted) return;
-    final result = EditProfileResult(
-      name: _nameController.text.trim(),
-      photoPath: _photoPath,
-    );
-    setState(() => _isSaving = false);
-    _showMessage('Profile updated (demo)');
-    context.pop(result);
+
+    try {
+      final response = await widget.repository.updateProfile(
+        name: _nameController.text.trim(),
+      );
+
+      if (!mounted) return;
+
+      if (response.failure != null || response.data == null) {
+        setState(() => _isSaving = false);
+        _showMessage('Failed to update profile. Please try again');
+        return;
+      }
+
+      final result = EditProfileResult(
+        name: response.data!.name,
+        photoPath: _photoPath,
+      );
+
+      setState(() => _isSaving = false);
+      _showMessage('Profile updated successfully');
+      context.pop(result);
+    } catch (_) {
+      if (!mounted) return;
+
+      setState(() => _isSaving = false);
+      _showMessage('An Error accourred while updating profile');
+    }
   }
 
   @override

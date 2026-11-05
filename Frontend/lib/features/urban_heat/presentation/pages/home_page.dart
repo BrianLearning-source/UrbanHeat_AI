@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-
+import '../../../profile/domain/entities/user_profile.dart';
+import '../../../profile/domain/repositories/profile_repository.dart';
 import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/app_spacing.dart';
 import '../../../../app/theme/app_text_styles.dart';
@@ -13,48 +14,107 @@ import '../../../../shared/widgets/placeholder_image.dart';
 import '../../../../shared/widgets/section_title.dart';
 
 class HomePage extends StatelessWidget {
-  const HomePage({super.key, required this.userName});
+  const HomePage({super.key, required this.profileRepository,});
 
-  final String userName;
+  final ProfileRepository profileRepository;
 
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.only(bottom: AppSpacing.xl),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              const AppTopBar(),
-              Padding(
-                padding: AppSpacing.screenPaddingH,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    const SizedBox(height: AppSpacing.xs),
-                    _HomeGreetingHeader(userName: userName),
-                    const SizedBox(height: AppSpacing.md),
-                    const _HeroOutlookCard(),
-                    const SizedBox(height: AppSpacing.lg),
-                    const _SurfaceHeatIntensityCard(),
-                    const SizedBox(height: AppSpacing.lg),
-                    const _LatestObservationCard(),
-                    const SizedBox(height: AppSpacing.lg),
-                    const _QuickActionsSection(),
-                    const SizedBox(height: AppSpacing.md),
-                    const _CanopyImpactBanner(),
-                  ],
-                ),
+  Widget build(BuildContext content) {
+    return StreamBuilder<UserProfile?>(
+      stream: profileRepository.watchProfile(),
+      builder: (context, snapshot) {
+        final profile = snapshot.data;
+        final userName = profile?.name ?? 'User';
+        final avatarUrl = profile?.avatarUrl;
+        return Scaffold(
+          backgroundColor: AppColors.background,
+          body: SafeArea(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.only(
+                bottom: AppSpacing.xl,
               ),
-            ],
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  AppTopBar(
+                    avatarUrl: avatarUrl,
+                    onProfileTap: () => context.go('/profile'),
+                  ), 
+
+                  Padding(
+                    padding: AppSpacing.screenPaddingH,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch, 
+                      children: [
+                        const SizedBox(height: AppSpacing.xs),
+
+                        _HomeGreetingHeader(
+                          userName: userName,
+                        ),
+
+                        const SizedBox(height: AppSpacing.md),
+                        const _HeroOutlookCard(),
+
+                        const SizedBox(height: AppSpacing.lg),
+                        const _SurfaceHeatIntensityCard(),
+
+                        const SizedBox(height: AppSpacing.lg),
+                        const _LatestObservationCard(),
+
+                        const SizedBox(height: AppSpacing.lg),
+                        const _QuickActionsSection(),
+
+                        const SizedBox(height: AppSpacing.md),
+                        const _CanopyImpactBanner(),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 }
+//   Widget build(BuildContext context) {
+//     return Scaffold(
+//       backgroundColor: AppColors.background,
+//       body: SafeArea(
+//         child: SingleChildScrollView(
+//           padding: const EdgeInsets.only(bottom: AppSpacing.xl),
+//           child: Column(
+//             crossAxisAlignment: CrossAxisAlignment.stretch,
+//             children: [
+//               const AppTopBar(),
+//               Padding(
+//                 padding: AppSpacing.screenPaddingH,
+//                 child: Column(
+//                   crossAxisAlignment: CrossAxisAlignment.stretch,
+//                   children: [
+//                     const SizedBox(height: AppSpacing.xs),
+//                     _HomeGreetingHeader(userName: userName),
+//                     const SizedBox(height: AppSpacing.md),
+//                     const _HeroOutlookCard(),
+//                     const SizedBox(height: AppSpacing.lg),
+//                     const _SurfaceHeatIntensityCard(),
+//                     const SizedBox(height: AppSpacing.lg),
+//                     const _LatestObservationCard(),
+//                     const SizedBox(height: AppSpacing.lg),
+//                     const _QuickActionsSection(),
+//                     const SizedBox(height: AppSpacing.md),
+//                     const _CanopyImpactBanner(),
+//                   ],
+//                 ),
+//               ),
+//             ],
+//           ),
+//         ),
+//       ),
+//     );
+//   }
+// }
 
 class _HomeGreetingHeader extends StatelessWidget {
   const _HomeGreetingHeader({required this.userName});

@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../features/profile/data/repositories/supabase_profile_repository.dart';
 
 import '../features/urban_heat/presentation/pages/heatmap_page.dart';
 import '../features/urban_heat/presentation/pages/prediction_result_page.dart';
@@ -23,7 +24,6 @@ import '../features/onboarding/presentation/pages/splash_pages.dart';
 import '../features/onboarding/presentation/pages/onboarding_pages.dart';
 import '../features/onboarding/data/repositories/shared_preferences_onboarding_repository.dart';
 import '../features/onboarding/domain/repositories/onboarding_repository.dart';
-import '../features/profile/data/repositories/mock_profile_repository.dart';
 import '../features/profile/domain/repositories/profile_repository.dart';
 import '../features/urban_heat/data/repositories/mock_urban_heat_repository.dart';
 import '../features/urban_heat/domain/repositories/urban_heat_repository.dart';
@@ -38,7 +38,9 @@ final AuthRepository authRepository = SupabaseAuthRepository(
 // Feature dependencies are constructed here and passed into pages.
 final UrbanHeatRepository urbanHeatFeatureRepository =
     const MockUrbanHeatRepository();
-final ProfileRepository profileRepository = const MockProfileRepository();
+// final ProfileRepository profileRepository = const MockProfileRepository();
+final ProfileRepository profileRepository =
+    SupabaseProfileRepository(Supabase.instance.client);
 final OnboardingRepository onboardingRepository =
     const SharedPreferencesOnboardingRepository();
 
@@ -103,6 +105,7 @@ GoRouter createAppRouter({required AuthRepository authRepository}) {
         builder: (context, state) {
           final arguments = state.extra as EditProfileArguments?;
           return EditProfileScreen(
+            repository: profileRepository,
             initialName:
                 arguments?.name ??
                 profileRepository.getProfile().data?.name ??
@@ -147,8 +150,7 @@ GoRouter createAppRouter({required AuthRepository authRepository}) {
               GoRoute(
                 path: '/home',
                 builder: (context, state) => HomePage(
-                  userName:
-                      profileRepository.getProfile().data?.name ?? 'Nasywa',
+                  profileRepository: profileRepository,
                 ),
               ),
             ],
