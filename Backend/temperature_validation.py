@@ -723,6 +723,12 @@ def _parse_datetime(value: object) -> tuple[str, bool, bool]:
 
 
 def _normalize_unit(value: object) -> str | None:
+    return normalize_temperature_unit(value)
+
+
+def normalize_temperature_unit(value: object) -> str | None:
+    """Return a canonical supported temperature unit without converting it."""
+
     unit = _nonempty_string(value)
     return _UNIT_ALIASES.get(unit.casefold()) if unit else None
 

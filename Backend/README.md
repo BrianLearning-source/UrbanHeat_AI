@@ -64,6 +64,58 @@ authoritative. Suspicious ranges are deliberately broad and configurable. A
 successful validation report is not calibration, ground truth, or an accuracy
 claim.
 
+## Calibration readiness pipeline
+
+`calibration_pipeline.py` provides a read-only readiness assessment. It accepts
+satellite LST observations and independent reference observations, runs both
+sets through `validate_temperature_records`, and matches only records whose
+validation status is `VALID`. It does not modify inputs, connect to Supabase,
+convert units, or fit a model.
+
+Each input record must use the validator's canonical fields and also provide:
+
+- `source_dataset_id` (or `source_dataset`) and `source_observation_id`: a
+  stable source identity. Repeated identities scoped by input side, dataset,
+  product, version, and band are all retained but excluded from matching. If
+  either identifier is missing or invalid, the pipeline reports the metadata
+  gap and does not infer a duplicate key from a database row ID.
+- `measurand`: a documented measurement concept; satellite and reference
+  values must have the same normalized label.
+- `measurand_definition_reference`: a non-empty reference to the documentation
+  defining that measurement concept. The reference must match on both sides.
+- `footprint_compatibility_id`: a shared identifier for a documented,
+  caller-verified footprint comparison method. Coordinate proximity alone
+  does not establish compatible footprints.
+- Reference records additionally need `reference_independence_basis`, a
+  non-empty provenance/documentation reference. Their `source_product` must
+  differ from the satellite product. These references and declarations are
+  not independently authenticated by the pipeline.
+
+Use `assess_calibration_readiness` with both product catalogs and an explicit
+`CalibrationConfig`. The configuration requires a maximum spatial distance in
+meters, maximum time difference in seconds, and minimum matched-pair count.
+Only timezone-aware `observation_datetime` values are matchable. A `created_at`
+field is never used. Spatial distance is calculated between the supplied
+coordinates using the haversine formula; the pipeline does not infer a
+measurement footprint or spatially aggregate data.
+
+Pairing requires equal measurand labels, equivalent recognized units (without
+conversion), equal footprint compatibility identifiers, distinct source
+products, and both configured distance/time thresholds. Matching is one-to-one
+and deterministic; observations that cannot be paired are retained in the
+report with exclusion reasons. Any `WARNING`, `UNKNOWN`, or `INVALID`
+validation status excludes that record from matching.
+
+Readiness is `READY` only when the number of valid matched pairs meets the
+configured minimum. A positive but insufficient count is
+`PARTIALLY_READY`; zero valid pairs is `NOT_READY`. Readiness is an input
+eligibility gate, not evidence that a calibration model is scientifically
+appropriate or accurate. No reference data, footprint method, thresholds,
+scale specifications, QA rules, or minimum sample size are bundled.
+The report's valid, invalid, warning, and unknown observation counts reflect
+the validator statuses; exclusion reasons separately describe matching
+eligibility and duplicate source identities.
+
 ## Run tests
 
 From `Backend`:
