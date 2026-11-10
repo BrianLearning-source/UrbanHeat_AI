@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
@@ -12,17 +10,17 @@ import '../../../../app/theme/app_text_styles.dart';
 import '../../../../shared/widgets/auth_widgets.dart';
 
 class EditProfileArguments {
-  const EditProfileArguments({required this.name, this.photoPath});
+  const EditProfileArguments({required this.name, this.avatarUrl});
 
   final String name;
-  final String? photoPath;
+  final String? avatarUrl;
 }
 
 class EditProfileResult {
-  const EditProfileResult({required this.name, this.photoPath});
+  const EditProfileResult({required this.name, this.avatarUrl});
 
   final String name;
-  final String? photoPath;
+  final String? avatarUrl;
 }
 
 class EditProfileScreen extends StatefulWidget {
@@ -30,12 +28,12 @@ class EditProfileScreen extends StatefulWidget {
     super.key,
     required this.initialName,
     required this.repository,
-    this.initialPhotoPath,
+    this.initialAvatarUrl,
   });
 
   final String initialName;
   final ProfileRepository repository;
-  final String? initialPhotoPath;
+  final String? initialAvatarUrl;
 
   @override
   State<EditProfileScreen> createState() => _EditProfileScreenState();
@@ -46,14 +44,16 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   final FocusNode _nameFocus = FocusNode();
   final ImagePicker _imagePicker = ImagePicker();
   XFile? _pickedPhoto;
+  Uint8List? _pickedPhotoBytes;
   bool _photoRemoved = false;
   bool _nameTouched = false;
   bool _submitted = false;
   bool _isSaving = false;
 
   String get _initialName => widget.initialName;
-  String? get _photoPath =>
-      _photoRemoved ? null : (_pickedPhoto?.path ?? widget.initialPhotoPath);
+  bool get _hasPhoto =>
+      !_photoRemoved &&
+      (_pickedPhoto != null || (widget.initialAvatarUrl?.isNotEmpty ?? false));
   bool get _photoChanged => _photoRemoved || _pickedPhoto != null;
   bool get _nameValid {
     final name = _nameController.text.trim();
@@ -105,7 +105,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 title: const Text('Choose from gallery'),
                 onTap: () => Navigator.pop(context, _PhotoAction.choose),
               ),
-              if (_photoPath != null)
+              if (_hasPhoto)
                 ListTile(
                   leading: const Icon(
                     Icons.delete_outline_rounded,
@@ -135,6 +135,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       setState(() {
         _photoRemoved = true;
         _pickedPhoto = null;
+        _pickedPhotoBytes = null;
       });
       return;
     }
@@ -146,8 +147,30 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         _showMessage('No photo selected.');
         return;
       }
+      // Mengambil ekstensi file foto yang dipilih.
+      final extension = photo.name.split('.').last.toLowerCase();
+
+      // Only accepted JPG, JPEG, dan PNG only.
+      const allowedExtensions = ['jpg', 'jpeg', 'png'];
+
+      if (!allowedExtensions.contains(extension)) {
+        _showMessage('Only JPG, JPEG, and PNG images are supported.');
+        return;
+      }
+
+      final photoBytes = await photo.readAsBytes();
+
+      // Memastikan widget masih aktif setelah proses membaca foto.
+      if (!mounted) return;
+
+      // Memastikan foto berhasil dibaca.
+      if (photoBytes.isEmpty) {
+        _showMessage('The selected photo is empty or could not be read.');
+        return;
+      }
       setState(() {
         _pickedPhoto = photo;
+        _pickedPhotoBytes = photoBytes;
         _photoRemoved = false;
       });
     } on PlatformException {
@@ -168,8 +191,25 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     setState(() => _isSaving = true);
 
     try {
+      Uint8List? avatarBytes;
+      String? avatarExtension;
+
+      if (_pickedPhoto != null) {
+        avatarBytes = _pickedPhotoBytes;
+
+        // Mengambil ekstensi file, misalnya jpg, jpeg, atau png.
+        avatarExtension = _pickedPhoto!.name.split('.').last.toLowerCase();
+
+        if (avatarBytes == null || avatarBytes.isEmpty) {
+          throw Exception('Photo data is unavailable.');
+        }
+      }
+
       final response = await widget.repository.updateProfile(
         name: _nameController.text.trim(),
+        avatarBytes: avatarBytes,
+        avatarExtension: avatarExtension,
+        removeAvatar: _photoRemoved,
       );
 
       if (!mounted) return;
@@ -182,7 +222,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
       final result = EditProfileResult(
         name: response.data!.name,
-        photoPath: _photoPath,
+        avatarUrl: response.data!.avatarUrl,
       );
 
       setState(() => _isSaving = false);
@@ -196,9 +236,54 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     }
   }
 
+  Widget _buildAvatarImage() {
+    // Jika foto dihapus, tampilkan ikon default.
+    if (_photoRemoved) {
+      return const Icon(
+        Icons.person_rounded,
+        size: AppSpacing.xl * 2,
+        color: AppColors.primary,
+      );
+    }
+
+    // Jika pengguna memilih foto baru dari galeri.
+    if (_pickedPhoto != null && _pickedPhotoBytes!.isNotEmpty) {
+      return Image.memory(
+        _pickedPhotoBytes!,
+        fit: BoxFit.cover,
+        errorBuilder: (_, _, _) => const Icon(
+          Icons.person_rounded,
+          size: AppSpacing.xl * 2,
+          color: AppColors.primary,
+        ),
+      );
+    }
+
+    // Jika sudah ada foto yang tersimpan di Supabase.
+    final avatarUrl = widget.initialAvatarUrl;
+
+    if (avatarUrl != null && avatarUrl.isNotEmpty) {
+      return Image.network(
+        avatarUrl,
+        fit: BoxFit.cover,
+        errorBuilder: (_, _, _) => const Icon(
+          Icons.person_rounded,
+          size: AppSpacing.xl * 2,
+          color: AppColors.primary,
+        ),
+      );
+    }
+
+    // Jika pengguna belum memiliki foto.
+    return const Icon(
+      Icons.person_rounded,
+      size: AppSpacing.xl * 2,
+      color: AppColors.primary,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    final avatar = _photoPath;
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
@@ -232,21 +317,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                                 color: AppColors.primary.withValues(
                                   alpha: 0.08,
                                 ),
-                                child: avatar == null
-                                    ? const Icon(
-                                        Icons.person_rounded,
-                                        size: AppSpacing.xl * 2,
-                                        color: AppColors.primary,
-                                      )
-                                    : Image.file(
-                                        File(avatar),
-                                        fit: BoxFit.cover,
-                                        errorBuilder: (_, _, _) => const Icon(
-                                          Icons.person_rounded,
-                                          size: AppSpacing.xl * 2,
-                                          color: AppColors.primary,
-                                        ),
-                                      ),
+                                child: _buildAvatarImage(),
                               ),
                             ),
                             Positioned(

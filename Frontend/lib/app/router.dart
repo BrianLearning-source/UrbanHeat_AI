@@ -44,9 +44,9 @@ final ProfileRepository profileRepository =
 final OnboardingRepository onboardingRepository =
     const SharedPreferencesOnboardingRepository();
 
-final GoRouter appRouter = createAppRouter(authRepository: authRepository);
+final GoRouter appRouter = createAppRouter(authRepository: authRepository, profileRepository: profileRepository,);
 
-GoRouter createAppRouter({required AuthRepository authRepository}) {
+GoRouter createAppRouter({required AuthRepository authRepository, required ProfileRepository profileRepository,}) {
   final authRefreshListenable = _AuthStateRefreshListenable(
     authRepository.authStateChanges,
   );
@@ -70,6 +70,11 @@ GoRouter createAppRouter({required AuthRepository authRepository}) {
       }
 
       if (authRepository.isAuthenticated && isPublicRoute) {
+        final redirectLocation = state.uri.queryParameters['from'];
+
+        if (location == '/login' && redirectLocation != null && redirectLocation.startsWith('/') && !redirectLocation.startsWith('//')) {
+          return redirectLocation;
+        }
         return '/home';
       }
 
@@ -110,7 +115,7 @@ GoRouter createAppRouter({required AuthRepository authRepository}) {
                 arguments?.name ??
                 profileRepository.getProfile().data?.name ??
                 'Nasywa',
-            initialPhotoPath: arguments?.photoPath,
+            initialAvatarUrl: arguments?.avatarUrl,
           );
         },
       ),
@@ -160,11 +165,11 @@ GoRouter createAppRouter({required AuthRepository authRepository}) {
             routes: [
               GoRoute(
                 path: '/heatmap',
-                builder: (context, state) => const HeatmapPage(),
+                builder: (context, state) => HeatmapPage(profileRepository: profileRepository,),
                 routes: [
                   GoRoute(
                     path: 'prediction',
-                    builder: (context, state) => const PredictionResultPage(),
+                    builder: (context, state) => PredictionResultPage( profileRepository: profileRepository,),
                   ),
                 ],
               ),
@@ -176,7 +181,7 @@ GoRouter createAppRouter({required AuthRepository authRepository}) {
               GoRoute(
                 path: '/hotspots',
                 builder: (context, state) =>
-                    HotspotsPage(repository: urbanHeatFeatureRepository),
+                    HotspotsPage(repository: urbanHeatFeatureRepository, profileRepository: profileRepository,),
                 routes: [
                   GoRoute(
                     path: 'area/:gridId',
@@ -194,6 +199,7 @@ GoRouter createAppRouter({required AuthRepository authRepository}) {
                           return ContributingFactorsPage(
                             gridId: gridId,
                             repository: urbanHeatFeatureRepository,
+                            profileRepository: profileRepository,
                           );
                         },
                       ),
@@ -205,6 +211,7 @@ GoRouter createAppRouter({required AuthRepository authRepository}) {
                           return MitigationPage(
                             gridId: gridId,
                             repository: urbanHeatFeatureRepository,
+                            profileRepository: profileRepository,
                           );
                         },
                       ),

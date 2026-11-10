@@ -121,27 +121,32 @@ class _LoginScreenState extends State<LoginScreen>
     }
   }
 
-  String get _safeRedirectLocation {
-    final location = widget.redirectLocation;
-    if (location == null) return '/home';
+  // Memastikan tujuan navigasi merupakan route internal yang aman.
+String get _safeRedirectLocation {
+  final location = widget.redirectLocation;
 
-    final uri = Uri.tryParse(location);
-    if (uri == null ||
-        uri.hasScheme ||
-        uri.hasAuthority ||
-        !uri.path.startsWith('/') ||
-        uri.path.startsWith('//') ||
-        const {
-          '/login',
-          '/register',
-          '/splash',
-          '/onboarding',
-        }.contains(uri.path)) {
-      return '/home';
-    }
+  // Login biasa tanpa tujuan sebelumnya akan menuju Home.
+  if (location == null) return '/home';
 
-    return location;
+  final uri = Uri.tryParse(location);
+
+  // Tolak URL eksternal dan route publik yang tidak perlu dituju ulang.
+  if (uri == null ||
+      uri.hasScheme ||
+      uri.hasAuthority ||
+      !uri.path.startsWith('/') ||
+      uri.path.startsWith('//') ||
+      const {
+        '/login',
+        '/register',
+        '/splash',
+        '/onboarding',
+      }.contains(uri.path)) {
+    return '/home';
   }
+
+  return location;
+}
 
   void _signInWithGoogle() {
     // TODO: Connect this action to the authentication provider's Google sign-in flow.

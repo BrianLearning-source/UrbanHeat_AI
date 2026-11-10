@@ -14,22 +14,27 @@ import '../../../../shared/widgets/buttons.dart';
 import '../../../../shared/widgets/info_card.dart';
 import '../../data/models/heatmap_observation.dart';
 import '../../data/repositories/supabase_heatmap_repository.dart';
+import '../../../profile/domain/entities/user_profile.dart';
+import '../../../profile/domain/repositories/profile_repository.dart';
 
 class HeatmapPage extends StatefulWidget {
-  const HeatmapPage({super.key});
+  const HeatmapPage({super.key, required this.profileRepository,});
 
+  final ProfileRepository profileRepository;
   @override
   State<HeatmapPage> createState() => _HeatmapPageState();
 }
 
 class _HeatmapPageState extends State<HeatmapPage> {
   late Future<List<HeatmapObservation>> _observationsFuture;
+  late final Stream<UserProfile?> _profileStream;
   String? _selectedDate;
   int? _selectedObservationId;
 
   @override
   void initState() {
     super.initState();
+    _profileStream = widget.profileRepository.watchProfile();
     _observationsFuture = _loadObservations();
   }
 
@@ -54,7 +59,10 @@ class _HeatmapPageState extends State<HeatmapPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              const AppTopBar(),
+              StreamBuilder<UserProfile?>(stream: _profileStream, builder: (context, snapshot) {
+                return AppTopBar(avatarUrl: snapshot.data?.avatarUrl, onProfileTap: () => context.go('/profile'),);
+              },
+            ),
               Padding(
                 padding: AppSpacing.screenPaddingH,
                 child: Column(

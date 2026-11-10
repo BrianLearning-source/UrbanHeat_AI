@@ -8,13 +8,14 @@ import 'package:urbanheat_ai/app/app.dart';
 import 'package:urbanheat_ai/app/router.dart';
 import 'package:urbanheat_ai/features/auth/presentation/pages/login_page.dart';
 import 'package:urbanheat_ai/features/auth/presentation/pages/register_page.dart';
+import 'package:urbanheat_ai/features/profile/data/repositories/mock_profile_repository.dart';
 
 void main() {
   testWidgets('UrbanHeat AI initial smoke and navigation test', (
     WidgetTester tester,
   ) async {
     final authRepository = _TestAuthRepository(authenticated: true);
-    final router = createAppRouter(authRepository: authRepository);
+    final router = createAppRouter(authRepository: authRepository, profileRepository: MockProfileRepository(),);
     tester.view.physicalSize = const Size(400, 900);
     tester.view.devicePixelRatio = 1.0;
     addTearDown(() {
@@ -122,7 +123,7 @@ void main() {
     WidgetTester tester,
   ) async {
     final authRepository = _TestAuthRepository(authenticated: false);
-    final router = createAppRouter(authRepository: authRepository);
+    final router = createAppRouter(authRepository: authRepository,   profileRepository: MockProfileRepository(),);
     addTearDown(() {
       router.dispose();
       unawaited(authRepository.dispose());
@@ -140,7 +141,7 @@ void main() {
     WidgetTester tester,
   ) async {
     final authRepository = _TestAuthRepository(authenticated: false);
-    final router = createAppRouter(authRepository: authRepository);
+    final router = createAppRouter(authRepository: authRepository, profileRepository: MockProfileRepository(),);
     addTearDown(() {
       router.dispose();
       unawaited(authRepository.dispose());
@@ -164,7 +165,7 @@ void main() {
       authenticated: false,
       signUpCreatesSession: false,
     );
-    final router = createAppRouter(authRepository: authRepository);
+    final router = createAppRouter(authRepository: authRepository, profileRepository: MockProfileRepository(),);
     addTearDown(() {
       router.dispose();
       unawaited(authRepository.dispose());
@@ -183,7 +184,7 @@ void main() {
     WidgetTester tester,
   ) async {
     final authRepository = _TestAuthRepository(authenticated: false);
-    final router = createAppRouter(authRepository: authRepository);
+    final router = createAppRouter(authRepository: authRepository, profileRepository: MockProfileRepository(),);
     addTearDown(() {
       router.dispose();
       unawaited(authRepository.dispose());
@@ -203,7 +204,7 @@ void main() {
     'authenticated users are redirected away from splash/onboarding',
     (WidgetTester tester) async {
       final authRepository = _TestAuthRepository(authenticated: true);
-      final router = createAppRouter(authRepository: authRepository);
+      final router = createAppRouter(authRepository: authRepository, profileRepository: MockProfileRepository(),);
       addTearDown(() {
         router.dispose();
         unawaited(authRepository.dispose());
@@ -228,7 +229,7 @@ void main() {
       authenticated: false,
       signInError: StateError('sensitive test detail'),
     );
-    final router = createAppRouter(authRepository: authRepository);
+    final router = createAppRouter(authRepository: authRepository, profileRepository: MockProfileRepository(),);
     addTearDown(() {
       router.dispose();
       unawaited(authRepository.dispose());
@@ -251,7 +252,7 @@ void main() {
       authenticated: false,
       signUpError: StateError('sensitive test detail'),
     );
-    final router = createAppRouter(authRepository: authRepository);
+    final router = createAppRouter(authRepository: authRepository, profileRepository: MockProfileRepository(),);
     addTearDown(() {
       router.dispose();
       unawaited(authRepository.dispose());

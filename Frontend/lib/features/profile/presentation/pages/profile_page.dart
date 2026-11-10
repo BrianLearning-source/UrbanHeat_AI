@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -30,37 +29,41 @@ class ProfilePage extends StatefulWidget {
 
 class _ProfilePageState extends State<ProfilePage> {
   late String _profileName;
-  File? _profilePhoto;
+  String? _avatarUrl;
   bool _isSigningOut = false;
 
   @override
   void initState() {
     super.initState();
-    _profileName = widget.repository.getProfile().data?.name ?? '';
+    final profile = widget.repository.getProfile().data;
+    _profileName = profile?.name ?? '';
+    _avatarUrl = profile?.avatarUrl;
   }
 
   Future<void> _openEditProfile() async {
     final result = await context.push<EditProfileResult>(
       '/edit-profile',
-      extra: EditProfileArguments(
-        name: _profileName,
-        photoPath: _profilePhoto?.path,
-      ),
+      extra: EditProfileArguments(name: _profileName, avatarUrl: _avatarUrl),
     );
     if (!mounted || result == null) return;
     setState(() {
       _profileName = result.name;
-      _profilePhoto = result.photoPath == null ? null : File(result.photoPath!);
+      _avatarUrl = result.avatarUrl;
     });
   }
 
   Future<void> _signOut() async {
     if (_isSigningOut) return;
+
+    final router = GoRouter.of(context);
+
     setState(() => _isSigningOut = true);
 
     try {
       await widget.authRepository.signOut();
-      if (mounted) context.go('/login');
+      router.go(
+        Uri(path: '/login', queryParameters: {'from': '/home'}).toString(),
+      );
     } on AuthException catch (error) {
       if (!mounted) return;
       ScaffoldMessenger.of(context)
@@ -87,7 +90,7 @@ class _ProfilePageState extends State<ProfilePage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              const AppTopBar(),
+              AppTopBar(avatarUrl: _avatarUrl),
               Padding(
                 padding: AppSpacing.screenPaddingH,
                 child: Column(
@@ -96,7 +99,7 @@ class _ProfilePageState extends State<ProfilePage> {
                     const SizedBox(height: AppSpacing.xs),
                     _UserProfileHeaderCard(
                       name: _profileName,
-                      photo: _profilePhoto,
+                      avatarUrl: _avatarUrl,
                       onTap: _openEditProfile,
                     ),
                     const SizedBox(height: AppSpacing.lg),
@@ -120,12 +123,12 @@ class _ProfilePageState extends State<ProfilePage> {
 class _UserProfileHeaderCard extends StatelessWidget {
   const _UserProfileHeaderCard({
     required this.name,
-    required this.photo,
+    required this.avatarUrl,
     required this.onTap,
   });
 
   final String name;
-  final File? photo;
+  final String? avatarUrl;
   final VoidCallback onTap;
 
   @override
@@ -145,14 +148,14 @@ class _UserProfileHeaderCard extends StatelessWidget {
             ),
             child: ClipRRect(
               borderRadius: AppSpacing.roundedSm,
-              child: photo == null
+              child: avatarUrl == null || avatarUrl!.isEmpty
                   ? const Icon(
                       Icons.person_rounded,
                       size: AppSpacing.xl,
                       color: AppColors.primary,
                     )
-                  : Image.file(
-                      photo!,
+                  : Image.network(
+                      avatarUrl!,
                       fit: BoxFit.cover,
                       errorBuilder: (_, _, _) => const Icon(
                         Icons.person_rounded,

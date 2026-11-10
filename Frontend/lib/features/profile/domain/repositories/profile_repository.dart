@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import '../../../../core/failures.dart';
 import '../entities/user_profile.dart';
 
@@ -8,5 +10,7 @@ abstract interface class ProfileRepository {
 
   Stream<UserProfile?> watchProfile(); //bagian ini mendengar perubahan data profil pengugna
 
-  Future<ProfileResult> updateProfile({required String name,}); //kalau yang ini memperbarui data profil pengguna
+  Future<ProfileResult> updateProfile({required String name, Uint8List? avatarBytes, String? avatarExtension, bool removeAvatar = false,}); 
+
+
 }

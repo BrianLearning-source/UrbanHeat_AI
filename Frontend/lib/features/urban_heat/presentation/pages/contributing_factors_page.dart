@@ -7,6 +7,8 @@ import '../../../../app/theme/app_text_styles.dart';
 import '../../domain/entities/shap_dimension.dart';
 import '../../domain/entities/shap_factor.dart';
 import '../../domain/repositories/urban_heat_repository.dart';
+import '../../../profile/domain/entities/user_profile.dart';
+import '../../../profile/domain/repositories/profile_repository.dart';
 import '../../../../shared/widgets/app_top_bar.dart';
 import '../../../../shared/widgets/buttons.dart';
 import '../../../../shared/widgets/feature_bar_row.dart';
@@ -17,11 +19,13 @@ import '../../../../shared/widgets/section_title.dart';
 class ContributingFactorsPage extends StatefulWidget {
   final String gridId;
   final UrbanHeatRepository repository;
+  final ProfileRepository profileRepository;
 
   const ContributingFactorsPage({
     super.key,
     required this.gridId,
     required this.repository,
+    required this.profileRepository,
   });
 
   @override
@@ -30,6 +34,7 @@ class ContributingFactorsPage extends StatefulWidget {
 }
 
 class _ContributingFactorsPageState extends State<ContributingFactorsPage> {
+  late final Stream<UserProfile?> _profileStream;
   List<ShapFactor> _factors = const [];
   List<ShapDimension> _dimensions = const [];
   bool _loading = true;
@@ -38,6 +43,8 @@ class _ContributingFactorsPageState extends State<ContributingFactorsPage> {
   @override
   void initState() {
     super.initState();
+    _profileStream = widget.profileRepository.watchProfile();
+
     _loadAnalysis();
   }
 
@@ -65,7 +72,15 @@ class _ContributingFactorsPageState extends State<ContributingFactorsPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              const AppTopBar(),
+              StreamBuilder<UserProfile?>(
+                stream: _profileStream,
+                builder: (context, snapshot) {
+                  return AppTopBar(
+                    avatarUrl: snapshot.data?.avatarUrl,
+                    onProfileTap: () => context.go('/profile'),
+                  );
+                },
+              ),
               Padding(
                 padding: AppSpacing.screenPaddingH,
                 child: Column(

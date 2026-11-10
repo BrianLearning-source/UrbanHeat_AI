@@ -1,3 +1,4 @@
+import 'dart:typed_data';
 import '../../domain/entities/user_profile.dart';
 import '../../domain/repositories/profile_repository.dart';
 import '../../../../core/failures.dart';
@@ -21,7 +22,7 @@ class MockProfileRepository implements ProfileRepository {
   }
 
   @override
-  Future<ProfileResult> updateProfile({required String name}) async {
+  Future<ProfileResult> updateProfile({required String name, Uint8List? avatarBytes, String? avatarExtension, bool removeAvatar = false,}) async {
     final currentProfile = getProfile().data;
 
     if (currentProfile == null) {
