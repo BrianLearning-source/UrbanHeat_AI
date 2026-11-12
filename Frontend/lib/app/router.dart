@@ -3,6 +3,11 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+
+import '../core/config/api_config.dart';
+import '../core/network/api_client.dart';
+import '../features/urban_heat/data/repositories/api_prediction_repository.dart';
+import '../features/urban_heat/domain/repositories/prediction_repository.dart';
 import '../features/profile/data/repositories/supabase_profile_repository.dart';
 import '../features/auth/presentation/pages/forgot_password_page.dart';
 import '../features/auth/presentation/pages/reset_password_page.dart';
@@ -40,14 +45,22 @@ final AuthRepository authRepository = SupabaseAuthRepository(
 final UrbanHeatRepository urbanHeatFeatureRepository =
     const MockUrbanHeatRepository();
 // final ProfileRepository profileRepository = const MockProfileRepository();
-final ProfileRepository profileRepository =
-    SupabaseProfileRepository(Supabase.instance.client);
+final ProfileRepository profileRepository = SupabaseProfileRepository(
+  Supabase.instance.client,
+);
 final OnboardingRepository onboardingRepository =
     const SharedPreferencesOnboardingRepository();
 
-final GoRouter appRouter = createAppRouter(authRepository: authRepository, profileRepository: profileRepository,);
+final GoRouter appRouter = createAppRouter(
+  authRepository: authRepository,
+  profileRepository: profileRepository,
+);
 
-GoRouter createAppRouter({required AuthRepository authRepository, required ProfileRepository profileRepository,}) {
+GoRouter createAppRouter({
+  required AuthRepository authRepository,
+  required ProfileRepository profileRepository,
+  PredictionRepository? predictionRepository,
+}) {
   final authRefreshListenable = _AuthStateRefreshListenable(
     authRepository.authStateChanges,
   );
@@ -66,7 +79,9 @@ GoRouter createAppRouter({required AuthRepository authRepository, required Profi
 
       final isRecoveryRoute = location == '/reset-password';
 
-      if (!authRepository.isAuthenticated && !isPublicRoute && !isRecoveryRoute) {
+      if (!authRepository.isAuthenticated &&
+          !isPublicRoute &&
+          !isRecoveryRoute) {
         return Uri(
           path: '/login',
           queryParameters: {'from': state.uri.toString()},
@@ -76,7 +91,10 @@ GoRouter createAppRouter({required AuthRepository authRepository, required Profi
       if (authRepository.isAuthenticated && isPublicRoute) {
         final redirectLocation = state.uri.queryParameters['from'];
 
-        if (location == '/login' && redirectLocation != null && redirectLocation.startsWith('/') && !redirectLocation.startsWith('//')) {
+        if (location == '/login' &&
+            redirectLocation != null &&
+            redirectLocation.startsWith('/') &&
+            !redirectLocation.startsWith('//')) {
           return redirectLocation;
         }
         return '/home';
@@ -109,7 +127,7 @@ GoRouter createAppRouter({required AuthRepository authRepository, required Profi
         builder: (context, state) =>
             RegisterScreen(authRepository: authRepository),
       ),
-       GoRoute(
+      GoRoute(
         path: '/forgot-password',
         builder: (context, state) => ForgotPasswordScreen(
           authRepository: authRepository,
@@ -118,9 +136,8 @@ GoRouter createAppRouter({required AuthRepository authRepository, required Profi
       ),
       GoRoute(
         path: '/reset-password',
-        builder: (context, state) => ResetPasswordScreen(
-          authRepository: authRepository,
-        ),
+        builder: (context, state) =>
+            ResetPasswordScreen(authRepository: authRepository),
       ),
       GoRoute(
         path: '/edit-profile',
@@ -138,7 +155,8 @@ GoRouter createAppRouter({required AuthRepository authRepository, required Profi
       ),
       GoRoute(
         path: '/change-password',
-        builder: (context, state) => ChangePasswordScreen(authRepository: authRepository,),
+        builder: (context, state) =>
+            ChangePasswordScreen(authRepository: authRepository),
       ),
       GoRoute(
         path: '/notifications',
@@ -171,9 +189,8 @@ GoRouter createAppRouter({required AuthRepository authRepository, required Profi
             routes: [
               GoRoute(
                 path: '/home',
-                builder: (context, state) => HomePage(
-                  profileRepository: profileRepository,
-                ),
+                builder: (context, state) =>
+                    HomePage(profileRepository: profileRepository),
               ),
             ],
           ),
@@ -182,11 +199,18 @@ GoRouter createAppRouter({required AuthRepository authRepository, required Profi
             routes: [
               GoRoute(
                 path: '/heatmap',
-                builder: (context, state) => HeatmapPage(profileRepository: profileRepository,),
+                builder: (context, state) =>
+                    HeatmapPage(profileRepository: profileRepository),
                 routes: [
                   GoRoute(
                     path: 'prediction',
-                    builder: (context, state) => PredictionResultPage( profileRepository: profileRepository,),
+                    builder: (context, state) => PredictionResultPage(
+                      profileRepository: profileRepository,
+                      predictionRepository: predictionRepository ??
+                        ApiPredictionRepository(
+                          ApiClient(baseUrl: ApiConfig.baseUrl),
+                        ),
+                    ),
                   ),
                 ],
               ),
@@ -197,8 +221,10 @@ GoRouter createAppRouter({required AuthRepository authRepository, required Profi
             routes: [
               GoRoute(
                 path: '/hotspots',
-                builder: (context, state) =>
-                    HotspotsPage(repository: urbanHeatFeatureRepository, profileRepository: profileRepository,),
+                builder: (context, state) => HotspotsPage(
+                  repository: urbanHeatFeatureRepository,
+                  profileRepository: profileRepository,
+                ),
                 routes: [
                   GoRoute(
                     path: 'area/:gridId',

@@ -1,5 +1,7 @@
 import 'dart:async';
 
+import 'package:urbanheat_ai/features/urban_heat/domain/entities/prediction.dart';
+import 'package:urbanheat_ai/features/urban_heat/domain/repositories/prediction_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:urbanheat_ai/features/auth/domain/entities/app_user.dart';
@@ -15,7 +17,11 @@ void main() {
     WidgetTester tester,
   ) async {
     final authRepository = _TestAuthRepository(authenticated: true);
-    final router = createAppRouter(authRepository: authRepository, profileRepository: MockProfileRepository(),);
+    final router = createAppRouter(
+      authRepository: authRepository,
+      profileRepository: MockProfileRepository(),
+      predictionRepository: _FakePredictionRepository(),
+    );
     tester.view.physicalSize = const Size(400, 900);
     tester.view.devicePixelRatio = 1.0;
     addTearDown(() {
@@ -46,8 +52,8 @@ void main() {
     router.go('/heatmap/prediction');
     await tester.pumpAndSettle();
     expect(find.text('Prediction Result'), findsOneWidget);
-    expect(find.text('XGBoost Spatio-Temporal Regressor'), findsOneWidget);
-
+    expect(find.text('Model Architecture'), findsOneWidget);
+    expect(find.text('DummyPredictor'), findsOneWidget);
     // Scroll to and tap "View Detailed Analysis →" -> /hotspots/area/LW-A12/factors
     final viewDetailedFinder = find.text('View Detailed Analysis →');
     await tester.ensureVisible(viewDetailedFinder);
@@ -123,7 +129,10 @@ void main() {
     WidgetTester tester,
   ) async {
     final authRepository = _TestAuthRepository(authenticated: false);
-    final router = createAppRouter(authRepository: authRepository,   profileRepository: MockProfileRepository(),);
+    final router = createAppRouter(
+      authRepository: authRepository,
+      profileRepository: MockProfileRepository(),
+    );
     addTearDown(() {
       router.dispose();
       unawaited(authRepository.dispose());
@@ -141,7 +150,10 @@ void main() {
     WidgetTester tester,
   ) async {
     final authRepository = _TestAuthRepository(authenticated: false);
-    final router = createAppRouter(authRepository: authRepository, profileRepository: MockProfileRepository(),);
+    final router = createAppRouter(
+      authRepository: authRepository,
+      profileRepository: MockProfileRepository(),
+    );
     addTearDown(() {
       router.dispose();
       unawaited(authRepository.dispose());
@@ -165,7 +177,10 @@ void main() {
       authenticated: false,
       signUpCreatesSession: false,
     );
-    final router = createAppRouter(authRepository: authRepository, profileRepository: MockProfileRepository(),);
+    final router = createAppRouter(
+      authRepository: authRepository,
+      profileRepository: MockProfileRepository(),
+    );
     addTearDown(() {
       router.dispose();
       unawaited(authRepository.dispose());
@@ -184,7 +199,11 @@ void main() {
     WidgetTester tester,
   ) async {
     final authRepository = _TestAuthRepository(authenticated: false);
-    final router = createAppRouter(authRepository: authRepository, profileRepository: MockProfileRepository(),);
+    final router = createAppRouter(
+      authRepository: authRepository,
+      profileRepository: MockProfileRepository(),
+      predictionRepository: _FakePredictionRepository(),
+    );
     addTearDown(() {
       router.dispose();
       unawaited(authRepository.dispose());
@@ -204,7 +223,10 @@ void main() {
     'authenticated users are redirected away from splash/onboarding',
     (WidgetTester tester) async {
       final authRepository = _TestAuthRepository(authenticated: true);
-      final router = createAppRouter(authRepository: authRepository, profileRepository: MockProfileRepository(),);
+      final router = createAppRouter(
+        authRepository: authRepository,
+        profileRepository: MockProfileRepository(),
+      );
       addTearDown(() {
         router.dispose();
         unawaited(authRepository.dispose());
@@ -229,7 +251,10 @@ void main() {
       authenticated: false,
       signInError: StateError('sensitive test detail'),
     );
-    final router = createAppRouter(authRepository: authRepository, profileRepository: MockProfileRepository(),);
+    final router = createAppRouter(
+      authRepository: authRepository,
+      profileRepository: MockProfileRepository(),
+    );
     addTearDown(() {
       router.dispose();
       unawaited(authRepository.dispose());
@@ -252,7 +277,10 @@ void main() {
       authenticated: false,
       signUpError: StateError('sensitive test detail'),
     );
-    final router = createAppRouter(authRepository: authRepository, profileRepository: MockProfileRepository(),);
+    final router = createAppRouter(
+      authRepository: authRepository,
+      profileRepository: MockProfileRepository(),
+    );
     addTearDown(() {
       router.dispose();
       unawaited(authRepository.dispose());
@@ -342,24 +370,18 @@ class _TestAuthRepository implements AuthRepository {
   Future<void> updatePassword({
     required String currentPassword,
     required String newPassword,
-  }) async {
-    
-  }
+  }) async {}
 
-   @override
+  @override
   Future<void> sendPasswordRecoveryEmail({
     required String email,
     required String redirectTo,
-  }) async {
-
-  }
+  }) async {}
 
   @override
   Future<void> updatePasswordAfterRecovery({
     required String newPassword,
-  }) async {
-
-  }
+  }) async {}
 
   @override
   Future<void> signOut() async {
@@ -385,4 +407,31 @@ class _TestAuthRepository implements AuthRepository {
   }
 
   Future<void> dispose() => _authChanges.close();
+}
+
+class _FakePredictionRepository implements PredictionRepository {
+  @override
+  Future<PredictionResult> predict({
+    required double latitude,
+    required double longitude,
+    required DateTime date,
+  }) async {
+    return (
+      data: Prediction(
+        latitude: latitude,
+        longitude: longitude,
+        date: date,
+        predictedLstCelsius: 34.8,
+        baseValueCelsius: 30.6,
+        riskLevel: 'HIGH',
+        factors: const [],
+        dimensions: const [],
+        mitigations: const [],
+        modelVersion: 'test-model',
+        isDummy: true,
+        generatedAt: DateTime.utc(2026, 11, 12),
+      ),
+      failure: null,
+    );
+  }
 }
