@@ -339,6 +339,29 @@ class _TestAuthRepository implements AuthRepository {
   }
 
   @override
+  Future<void> updatePassword({
+    required String currentPassword,
+    required String newPassword,
+  }) async {
+    
+  }
+
+   @override
+  Future<void> sendPasswordRecoveryEmail({
+    required String email,
+    required String redirectTo,
+  }) async {
+
+  }
+
+  @override
+  Future<void> updatePasswordAfterRecovery({
+    required String newPassword,
+  }) async {
+
+  }
+
+  @override
   Future<void> signOut() async {
     _isAuthenticated = false;
     _authChanges.add(null);

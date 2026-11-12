@@ -1,13 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../domain/repositories/auth_repository.dart';
 import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/app_spacing.dart';
 import '../../../../app/theme/app_text_styles.dart';
 import '../../../../shared/widgets/auth_widgets.dart';
 
 class ChangePasswordScreen extends StatefulWidget {
-  const ChangePasswordScreen({super.key});
+  const ChangePasswordScreen({super.key, required this.authRepository});
+
+  final AuthRepository authRepository;
 
   @override
   State<ChangePasswordScreen> createState() => _ChangePasswordScreenState();
@@ -73,13 +76,35 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
     if (!_valid) return;
 
     setState(() => _isSubmitting = true);
-    // TODO: connect to backend change-password endpoint when available.
-    await Future<void>.delayed(const Duration(seconds: 1));
-    if (!mounted) return;
-    setState(() => _isSubmitting = false);
-    ScaffoldMessenger.of(context)
-        .showSnackBar(const SnackBar(content: Text('Password updated (demo)')));
-    context.pop();
+
+    try {
+      await widget.authRepository.updatePassword(
+        currentPassword: _currentController.text,
+        newPassword: _newController.text,
+      );
+
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Password updated successfully')),
+      );
+      context.pop();
+    } catch (error) {
+      debugPrint('Password update failed (${error.runtimeType}).');
+
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Password update failed. Check your current password and try again.',
+          ),
+        ),
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _isSubmitting = false);
+      }
+    }
   }
 
   Widget _visibilityButton({

@@ -65,6 +65,49 @@ class SupabaseAuthRepository implements AuthRepository {
   }
 
   @override
+  Future<void> updatePassword({
+    required String currentPassword,
+    required String  newPassword,
+  }) async {
+    if (!isAuthenticated) {
+      throw const AuthException(
+        'You must be signed in to update your password',
+      );
+    }
+    await _supabase.auth.updateUser(
+      UserAttributes(
+        password: newPassword,
+        currentPassword: currentPassword,
+      ),
+    );
+  }
+
+  @override
+  Future<void> sendPasswordRecoveryEmail({
+    required String email,
+    required String redirectTo,
+  }) async {
+    await _supabase.auth.resetPasswordForEmail(email.trim(), redirectTo: redirectTo,);
+  }
+
+  @override
+  Future<void> updatePasswordAfterRecovery({
+    required String newPassword,
+  }) async {
+    if (!isAuthenticated) {
+      throw const AuthException(
+        'Recovery session not found. PLease repeat the recovery process'
+      );
+    }
+
+    await _supabase.auth.updateUser(
+      UserAttributes(
+        password: newPassword,
+      ),
+    );
+  }
+
+  @override
   // Mengambil pengguna dari sesi yang lagi aktif.
   Future<AppUser?> getCurrentUser() async {
     return _mapUser(_supabase.auth.currentSession?.user);

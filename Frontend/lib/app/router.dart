@@ -4,7 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../features/profile/data/repositories/supabase_profile_repository.dart';
-
+import '../features/auth/presentation/pages/forgot_password_page.dart';
+import '../features/auth/presentation/pages/reset_password_page.dart';
 import '../features/urban_heat/presentation/pages/heatmap_page.dart';
 import '../features/urban_heat/presentation/pages/prediction_result_page.dart';
 import '../features/urban_heat/presentation/pages/home_page.dart';
@@ -60,9 +61,12 @@ GoRouter createAppRouter({required AuthRepository authRepository, required Profi
         '/onboarding',
         '/login',
         '/register',
+        '/forgot-password',
       }.contains(location);
 
-      if (!authRepository.isAuthenticated && !isPublicRoute) {
+      final isRecoveryRoute = location == '/reset-password';
+
+      if (!authRepository.isAuthenticated && !isPublicRoute && !isRecoveryRoute) {
         return Uri(
           path: '/login',
           queryParameters: {'from': state.uri.toString()},
@@ -105,6 +109,19 @@ GoRouter createAppRouter({required AuthRepository authRepository, required Profi
         builder: (context, state) =>
             RegisterScreen(authRepository: authRepository),
       ),
+       GoRoute(
+        path: '/forgot-password',
+        builder: (context, state) => ForgotPasswordScreen(
+          authRepository: authRepository,
+          initialEmail: state.extra as String?,
+        ),
+      ),
+      GoRoute(
+        path: '/reset-password',
+        builder: (context, state) => ResetPasswordScreen(
+          authRepository: authRepository,
+        ),
+      ),
       GoRoute(
         path: '/edit-profile',
         builder: (context, state) {
@@ -121,7 +138,7 @@ GoRouter createAppRouter({required AuthRepository authRepository, required Profi
       ),
       GoRoute(
         path: '/change-password',
-        builder: (context, state) => const ChangePasswordScreen(),
+        builder: (context, state) => ChangePasswordScreen(authRepository: authRepository,),
       ),
       GoRoute(
         path: '/notifications',
