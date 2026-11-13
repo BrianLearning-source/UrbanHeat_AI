@@ -1,5 +1,8 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+
 import '../../../profile/domain/entities/user_profile.dart';
 import '../../../profile/domain/repositories/profile_repository.dart';
 import '../../../../app/theme/app_colors.dart';
@@ -14,7 +17,7 @@ import '../../../../shared/widgets/placeholder_image.dart';
 import '../../../../shared/widgets/section_title.dart';
 
 class HomePage extends StatelessWidget {
-  const HomePage({super.key, required this.profileRepository,});
+  const HomePage({super.key, required this.profileRepository});
 
   final ProfileRepository profileRepository;
 
@@ -30,27 +33,23 @@ class HomePage extends StatelessWidget {
           backgroundColor: AppColors.background,
           body: SafeArea(
             child: SingleChildScrollView(
-              padding: const EdgeInsets.only(
-                bottom: AppSpacing.xl,
-              ),
+              padding: const EdgeInsets.only(bottom: AppSpacing.xl),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   AppTopBar(
                     avatarUrl: avatarUrl,
                     onProfileTap: () => context.go('/profile'),
-                  ), 
+                  ),
 
                   Padding(
                     padding: AppSpacing.screenPaddingH,
                     child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch, 
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
                         const SizedBox(height: AppSpacing.xs),
 
-                        _HomeGreetingHeader(
-                          userName: userName,
-                        ),
+                        _HomeGreetingHeader(userName: userName),
 
                         const SizedBox(height: AppSpacing.md),
                         const _HeroOutlookCard(),
@@ -116,10 +115,52 @@ class HomePage extends StatelessWidget {
 //   }
 // }
 
-class _HomeGreetingHeader extends StatelessWidget {
+class _HomeGreetingHeader extends StatefulWidget {
   const _HomeGreetingHeader({required this.userName});
 
   final String userName;
+
+  @override
+  State<_HomeGreetingHeader> createState() => _HomeGreetingHeaderState();
+}
+
+class _HomeGreetingHeaderState extends State<_HomeGreetingHeader> {
+  Timer? _greetingTimer;
+
+  @override
+  void initState() {
+    super.initState();
+
+    // Periksa waktu setiap satu menit.
+    _greetingTimer = Timer.periodic(
+      const Duration(minutes: 1),
+      (_) {
+        if (mounted) {
+          setState(() {});
+        }
+      },
+    );
+  }
+
+  @override
+  void dispose() {
+    _greetingTimer?.cancel();
+    super.dispose();
+  }
+
+  String get _timeGreeting {
+    final hour = DateTime.now().hour;
+
+    if (hour >= 5 && hour < 11) {
+      return 'Good morning';
+    } else if (hour >= 11 && hour < 15) {
+      return 'Good afternoon';
+    } else if (hour >= 15 && hour < 18) {
+      return 'Good evening';
+    } else {
+      return 'Good night';
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -130,7 +171,8 @@ class _HomeGreetingHeader extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Good morning, $userName', style: AppTextStyles.pageTitle),
+              Text('$_timeGreeting, ${widget.userName}', 
+              style: AppTextStyles.pageTitle,),
               const SizedBox(height: AppSpacing.xs),
             ],
           ),
@@ -474,40 +516,40 @@ class _QuickActionsSection extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-  const SectionTitle(title: 'Quick Actions'),
-  const SizedBox(height: AppSpacing.xs),
+        const SectionTitle(title: 'Quick Actions'),
+        const SizedBox(height: AppSpacing.xs),
 
-  _QuickActionTile(
-    icon: Icons.map_outlined,
-    title: 'City Heatmap',
-    subtitle: 'Explore predicted LST across Kota Malang.',
-    onTap: () => context.go('/heatmap'),
-  ),
+        _QuickActionTile(
+          icon: Icons.map_outlined,
+          title: 'City Heatmap',
+          subtitle: 'Explore predicted LST across Kota Malang.',
+          onTap: () => context.go('/heatmap'),
+        ),
 
-  const SizedBox(height: AppSpacing.xs),
-  _QuickActionTile(
-    icon: Icons.local_fire_department_outlined,
-    title: 'Potential Hotspots',
-    subtitle: 'View high heat intensity areas.',
-    onTap: () => context.go('/hotspots'),
-  ),
+        const SizedBox(height: AppSpacing.xs),
+        _QuickActionTile(
+          icon: Icons.local_fire_department_outlined,
+          title: 'Potential Hotspots',
+          subtitle: 'View high heat intensity areas.',
+          onTap: () => context.go('/hotspots'),
+        ),
 
-  const SizedBox(height: AppSpacing.xs),
-  _QuickActionTile(
-    icon: Icons.grid_view_rounded,
-    title: 'Area Detail',
-    subtitle: 'Inspect selected grid & indicators.',
-    onTap: () => context.go('/hotspots/area/MC-204'),
-  ),
+        const SizedBox(height: AppSpacing.xs),
+        _QuickActionTile(
+          icon: Icons.grid_view_rounded,
+          title: 'Area Detail',
+          subtitle: 'Inspect selected grid & indicators.',
+          onTap: () => context.go('/hotspots/area/MC-204'),
+        ),
 
-  const SizedBox(height: AppSpacing.xs),
-  _QuickActionTile(
-    icon: Icons.event_note_rounded,
-    title: 'Planning',
-    subtitle: 'Manage your heat mitigation plans and activities.',
-    onTap: () => context.push('/planning'),
-  ),
-],
+        const SizedBox(height: AppSpacing.xs),
+        _QuickActionTile(
+          icon: Icons.event_note_rounded,
+          title: 'Planning',
+          subtitle: 'Manage your heat mitigation plans and activities.',
+          onTap: () => context.push('/planning'),
+        ),
+      ],
     );
   }
 }
