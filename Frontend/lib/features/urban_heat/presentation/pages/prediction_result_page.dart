@@ -366,23 +366,27 @@ class _PredictionGaugeCard extends StatelessWidget {
           ),
           const SizedBox(height: AppSpacing.lg),
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: [
-              _GaugeMetricItem(
-                label: 'Base Value',
-                value: '${prediction.baseValueCelsius.toStringAsFixed(1)}°C',
-              ),
-              _GaugeMetricItem(
-                label: 'Difference',
-                value:
-                    '${difference >= 0 ? '+' : ''}${difference.toStringAsFixed(1)}°C',
-              ),
-              _GaugeMetricItem(
-                label: 'Factors',
-                value: prediction.factors.length.toString(),
-              ),
-            ],
-          ),
+  children: [
+    Expanded(
+      child: _GaugeMetricItem(
+        label: 'Base Value',
+        value: '${prediction.baseValueCelsius.toStringAsFixed(1)}°C',
+      ),
+    ),
+    Expanded(
+      child: _GaugeMetricItem(
+        label: 'Difference',
+        value: '${difference >= 0 ? '+' : ''}${difference.toStringAsFixed(1)}°C',
+      ),
+    ),
+    Expanded(
+      child: _GaugeMetricItem(
+        label: 'Factors',
+        value: prediction.factors.length.toString(),
+      ),
+    ),
+  ],
+),
           const SizedBox(height: AppSpacing.md),
           Container(
             padding: const EdgeInsets.all(AppSpacing.sm),
