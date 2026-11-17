@@ -16,7 +16,9 @@ import '../../data/models/heatmap_observation.dart';
 import '../../data/repositories/supabase_heatmap_repository.dart';
 
 class HeatmapPage extends StatefulWidget {
-  const HeatmapPage({super.key});
+  const HeatmapPage({super.key, this.repository});
+
+  final HeatmapObservationRepository? repository;
 
   @override
   State<HeatmapPage> createState() => _HeatmapPageState();
@@ -40,7 +42,9 @@ class _HeatmapPageState extends State<HeatmapPage> {
   }
 
   Future<List<HeatmapObservation>> _loadObservations() async {
-    final repository = SupabaseHeatmapRepository(Supabase.instance.client);
+    final repository =
+        widget.repository ??
+        SupabaseHeatmapRepository(Supabase.instance.client);
     return repository.getObservations();
   }
 
@@ -64,8 +68,9 @@ class _HeatmapPageState extends State<HeatmapPage> {
                     Text('City Heatmap', style: AppTextStyles.pageTitle),
                     const SizedBox(height: AppSpacing.xs),
                     Text(
-                      'Observed satellite-derived Land Surface Temperature '
-                      'at available locations in Kota Malang.',
+                      'Point-based map of stored observations in Kota Malang. '
+                      'Marker colors compare the numeric lst values; the '
+                      'value unit and source provenance are unverified.',
                       style: AppTextStyles.caption.copyWith(
                         color: AppColors.textSecondary,
                       ),
@@ -116,7 +121,7 @@ class _HeatmapPageState extends State<HeatmapPage> {
               const CircularProgressIndicator(color: AppColors.accent),
               const SizedBox(height: AppSpacing.md),
               Text(
-                'Loading satellite observations...',
+                'Loading observations...',
                 style: AppTextStyles.body.copyWith(
                   color: AppColors.textSecondary,
                 ),
@@ -174,7 +179,7 @@ class _HeatmapPageState extends State<HeatmapPage> {
           Text('No mappable observations', style: AppTextStyles.sectionTitle),
           const SizedBox(height: AppSpacing.xs),
           Text(
-            'No rows with a valid date, coordinate, and LST value are '
+            'No rows with a valid date, coordinate, and numeric lst value are '
             'available from malang_climate_pilot.',
             textAlign: TextAlign.center,
             style: AppTextStyles.body.copyWith(color: AppColors.textSecondary),
@@ -198,10 +203,10 @@ class _HeatmapPageState extends State<HeatmapPage> {
       (observation) => observation.id == _selectedObservationId,
       orElse: () => dateObservations.first,
     );
-    final minimumLst = observations
+    final minimumLst = dateObservations
         .map((observation) => observation.lst)
         .reduce(math.min);
-    final maximumLst = observations
+    final maximumLst = dateObservations
         .map((observation) => observation.lst)
         .reduce(math.max);
     final earliestDate = dates.last;
@@ -219,14 +224,14 @@ class _HeatmapPageState extends State<HeatmapPage> {
           Row(
             children: [
               const Icon(
-                Icons.satellite_alt_outlined,
+                Icons.location_on_outlined,
                 color: AppColors.accent,
                 size: 21,
               ),
               const SizedBox(width: AppSpacing.xs),
               Expanded(
                 child: Text(
-                  'Observed LST points',
+                  'Stored observation points',
                   style: AppTextStyles.sectionTitle,
                 ),
               ),
@@ -240,7 +245,7 @@ class _HeatmapPageState extends State<HeatmapPage> {
           ),
           const SizedBox(height: AppSpacing.xs),
           Text(
-            'Choose an observation date',
+            'Filter by observation date',
             style: AppTextStyles.caption.copyWith(
               color: AppColors.textSecondary,
             ),
@@ -327,8 +332,8 @@ class _HeatmapPageState extends State<HeatmapPage> {
                   _formatDate(selectedObservation.dateKey),
                 ),
                 _observationDetail(
-                  'LST',
-                  '${selectedObservation.lst.toStringAsFixed(2)} °C',
+                  'Numeric label',
+                  '${selectedObservation.lst.toStringAsFixed(2)} (unit unknown)',
                 ),
                 _observationDetail(
                   'NDVI',
@@ -340,15 +345,28 @@ class _HeatmapPageState extends State<HeatmapPage> {
                   '${selectedObservation.latitude.toStringAsFixed(5)}, '
                       '${selectedObservation.longitude.toStringAsFixed(5)}',
                 ),
+                _observationDetail(
+                  'Data source',
+                  'Supabase · malang_climate_pilot.lst',
+                ),
+                _observationDetail(
+                  'Data status',
+                  'Stored observation; unit and provenance unverified',
+                ),
+                _observationDetail(
+                  'Record type',
+                  'Observation, not prediction',
+                ),
               ],
             ),
           ),
           const SizedBox(height: AppSpacing.md),
           Text(
-            'Data source: malang_climate_pilot. Available observations: '
-            '${_formatDate(earliestDate)} – ${_formatDate(latestDate)}. '
-            'This is a point-based display of historical satellite-derived '
-            'observations, not a continuous raster or live feed.',
+            'Last observation date: ${_formatDate(latestDate)}. '
+            'Available date range: ${_formatDate(earliestDate)} – '
+            '${_formatDate(latestDate)}. Marker colors show relative numeric '
+            'lst values for the selected date only. This is a point map, not '
+            'an interpolated heat surface or a prediction.',
             style: AppTextStyles.caption.copyWith(
               color: AppColors.textSecondary,
             ),
@@ -407,7 +425,10 @@ class _HeatmapPageState extends State<HeatmapPage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('LST intensity (°C)', style: AppTextStyles.caption),
+        Text(
+          'Relative numeric lst value (unit unknown)',
+          style: AppTextStyles.caption,
+        ),
         const SizedBox(height: AppSpacing.xs),
         Container(
           height: 10,
@@ -427,11 +448,11 @@ class _HeatmapPageState extends State<HeatmapPage> {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(
-              '${minimumLst.toStringAsFixed(1)} °C · Cooler',
+              '${minimumLst.toStringAsFixed(2)} · Lower',
               style: AppTextStyles.caption,
             ),
             Text(
-              '${maximumLst.toStringAsFixed(1)} °C · Warmer',
+              '${maximumLst.toStringAsFixed(2)} · Higher',
               style: AppTextStyles.caption,
             ),
           ],

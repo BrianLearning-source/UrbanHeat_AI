@@ -3,11 +3,16 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../models/heatmap_observation.dart';
 
-class SupabaseHeatmapRepository {
+abstract interface class HeatmapObservationRepository {
+  Future<List<HeatmapObservation>> getObservations();
+}
+
+class SupabaseHeatmapRepository implements HeatmapObservationRepository {
   const SupabaseHeatmapRepository(this._client);
 
   final SupabaseClient _client;
 
+  @override
   Future<List<HeatmapObservation>> getObservations() async {
     final rows = await _client
         .from('malang_climate_pilot')
