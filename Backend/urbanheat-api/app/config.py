@@ -24,3 +24,19 @@ def risk_level_from_lst(lst_celsius: float) -> str:
         if lst_celsius >= threshold:
             return label
     return RISK_DEFAULT
+
+# === SURFACE HEAT INTENSITY INDEX - DASHBOARD ====
+HEAT_INTENSITY_LOWER_THRESHOLD_CELSIUS = 28.0
+HEAT_INTENSITY_HIGHER_THRESHOLD_CELSIUS = 34.0
+
+HEAT_INTENSITY_SCALE_MIN_CELSIUS = 24.0
+HEAT_INTENSITY_SCALE_MAX_CELSIUS = 40.0
+
+def heat_intensity_level_from_lst(lst_celcius: float) -> str:
+    if lst_celcius < HEAT_INTENSITY_LOWER_THRESHOLD_CELSIUS:
+        return "LOWER"
+
+    if lst_celcius <= HEAT_INTENSITY_HIGHER_THRESHOLD_CELSIUS:
+        return "MODERATE"
+
+    return "HIGHER"

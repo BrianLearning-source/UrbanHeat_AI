@@ -12,6 +12,18 @@ import 'package:urbanheat_ai/features/auth/presentation/pages/login_page.dart';
 import 'package:urbanheat_ai/features/auth/presentation/pages/register_page.dart';
 import 'package:urbanheat_ai/features/profile/data/repositories/mock_profile_repository.dart';
 
+Finder findTimeBasedGreeting(String name) {
+  final greetingPattern = RegExp(
+    '^Good (morning|afternoon|evening|night), '
+    '${RegExp.escape(name)}\$',
+  );
+
+  return find.byWidgetPredicate(
+    (widget) => widget is Text && greetingPattern.hasMatch(widget.data ?? ''),
+    description: 'time-based greeting for $name',
+  );
+}
+
 void main() {
   testWidgets('UrbanHeat AI initial smoke and navigation test', (
     WidgetTester tester,
@@ -36,7 +48,7 @@ void main() {
     await tester.pumpAndSettle();
 
     // 1. Start the smoke flow at Home, where the navigation test begins.
-    expect(find.text('Good morning, Nasywa'), findsOneWidget);
+    expect(findTimeBasedGreeting('Nasywa'), findsOneWidget);
     expect(find.text('City-wide Heat\nOutlook (Kota\nMalang)'), findsOneWidget);
 
     // Scroll to and tap "Explore City Heatmap →" -> /heatmap
@@ -167,7 +179,7 @@ void main() {
     expect(authRepository.signUpName, 'Test User');
     expect(authRepository.signUpEmail, 'test@example.com');
     expect(authRepository.signUpPassword, 'password123');
-    expect(find.text('Good morning, Nasywa'), findsOneWidget);
+    expect(findTimeBasedGreeting('Nasywa'), findsOneWidget);
   });
 
   testWidgets('registration without a session remains unauthenticated', (
@@ -236,11 +248,19 @@ void main() {
       await tester.pumpWidget(UrbanHeatApp(router: router));
       await tester.pumpAndSettle();
 
-      expect(find.text('Good morning, Nasywa'), findsOneWidget);
+      expect(
+        find.byWidgetPredicate(
+          (widget) =>
+              widget is Text &&
+              RegExp(r'^Good (morning|afternoon|evening|night), Nasywa$')
+                  .hasMatch(widget.data ?? ''),
+        ),
+        findsOneWidget,
+      );
 
       router.go('/onboarding');
       await tester.pumpAndSettle();
-      expect(find.text('Good morning, Nasywa'), findsOneWidget);
+      expect(findTimeBasedGreeting('Nasywa'), findsOneWidget);
     },
   );
 

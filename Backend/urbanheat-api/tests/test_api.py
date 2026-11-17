@@ -70,3 +70,37 @@ def test_dimensions_present():
     assert len(body["dimensions"]) == 4
     assert set(body["dimensions"][0]) == {"title", "subtitle", "badge", "description"}
     assert client.get("/v1/areas/MC-204").json()["dimensions"]
+
+def test_heat_intensity_summary_is_dummy_and_classified():
+
+    response = client.get("/v1/heat-intensity/summary")
+
+    assert response.status_code == 200
+
+    body = response.json()
+
+    assert body["scope"] == "CITY_WIDE"
+    assert body["area_name"] == "Kota Malang"
+
+    assert body["lst_celsius"] == 33.4
+    assert body["intensity_level"] == "MODERATE"
+
+    assert body["lower_threshold_celsius"] == 28.0
+    assert body["higher_threshold_celsius"] == 34.0
+
+    assert body["scale_min_celsius"] == 24.0
+    assert body["scale_max_celsius"] == 40.0
+
+    assert body["source"] == "dummy"
+    assert body["is_dummy"] is True
+
+
+def test_heat_intensity_threshold_boundaries():
+
+    from app.config import heat_intensity_level_from_lst
+
+    assert heat_intensity_level_from_lst(27.99) == "LOWER"
+    assert heat_intensity_level_from_lst(28.0) == "MODERATE"
+
+    assert heat_intensity_level_from_lst(34.0) == "MODERATE"
+    assert heat_intensity_level_from_lst(34.01) == "HIGHER"

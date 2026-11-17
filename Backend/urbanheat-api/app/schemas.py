@@ -11,6 +11,8 @@ from pydantic import BaseModel, Field
 
 RiskLevel = Literal["LOW", "MODERATE", "ELEVATED", "HIGH"]
 
+HeatIntensityLevel = Literal["LOWER", "MODERATE", "HIGHER"]
+
 
 # ---------- REQUEST ----------
 class PredictRequest(BaseModel):
@@ -78,6 +80,24 @@ class PredictResponse(BaseModel):
     is_dummy: bool              # True selama model asli belum dipasang
     generated_at: datetime
 
+class HeatIntensitySummaryResponse(BaseModel):
+    scope: Literal["CITY_WIDE"]
+    area_name: str
+
+    lst_celsius: float
+    intensity_level: HeatIntensityLevel
+
+    lower_threshold_celsius: float
+    higher_threshold_celsius: float
+
+    scale_min_celsius: float
+    scale_max_celsius: float
+
+    model_version: str
+    source: Literal["dummy", "ml_model", "observations"]
+    is_dummy: bool
+
+    generated_at: datetime
 
 class Hotspot(BaseModel):
     rank: int

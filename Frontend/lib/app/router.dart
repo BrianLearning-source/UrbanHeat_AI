@@ -36,6 +36,9 @@ import '../features/urban_heat/domain/repositories/urban_heat_repository.dart';
 import '../shared/widgets/app_bottom_nav.dart';
 import '../features/auth/domain/repositories/auth_repository.dart';
 import '../features/auth/data/repositories/supabase_auth_repository.dart';
+import '../features/urban_heat/data/repositories/api_heat_intensity_repository.dart';
+import '../features/urban_heat/data/repositories/mock_heat_intensity_repository.dart';
+import '../features/urban_heat/domain/repositories/heat_intensity_repository.dart';
 
 final AuthRepository authRepository = SupabaseAuthRepository(
   Supabase.instance.client,
@@ -54,16 +57,24 @@ final OnboardingRepository onboardingRepository =
 final GoRouter appRouter = createAppRouter(
   authRepository: authRepository,
   profileRepository: profileRepository,
+    heatIntensityRepository: ApiHeatIntensityRepository(
+    ApiClient(baseUrl: ApiConfig.baseUrl),
+    ),
 );
 
 GoRouter createAppRouter({
   required AuthRepository authRepository,
   required ProfileRepository profileRepository,
   PredictionRepository? predictionRepository,
+  HeatIntensityRepository? heatIntensityRepository,
 }) {
   final authRefreshListenable = _AuthStateRefreshListenable(
     authRepository.authStateChanges,
   );
+
+  final dashboardHeatIntensityRepository =
+    heatIntensityRepository ??
+    const MockHeatIntensityRepository();
 
   return GoRouter(
     refreshListenable: authRefreshListenable,
@@ -190,7 +201,7 @@ GoRouter createAppRouter({
               GoRoute(
                 path: '/home',
                 builder: (context, state) =>
-                    HomePage(profileRepository: profileRepository),
+                    HomePage(profileRepository: profileRepository, heatIntensityRepository: dashboardHeatIntensityRepository,),
               ),
             ],
           ),

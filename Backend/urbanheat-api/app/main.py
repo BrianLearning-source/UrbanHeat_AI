@@ -6,10 +6,11 @@ from fastapi.middleware.cors import CORSMiddleware
 from . import config
 from .errors import ApiError, register_error_handlers
 from .schemas import (AreaDetailResponse, ErrorResponse, HotspotsResponse, Location,
-                      PredictRequest, PredictResponse)
+                      PredictRequest, PredictResponse, HeatIntensitySummaryResponse)
 from .services import dummy_data
 from .services.explain import build_dimensions, build_factors, build_mitigations
 from .services.predictor import DummyPredictor, HeatPredictor
+from .services.heat_intensity import (DummyHeatIntensityProvider, HeatIntensityProvider)
 
 app = FastAPI(title="UrbanHeat AI API", version="0.1.0",
               description="Prediction API untuk aplikasi UrbanHeat AI.")
@@ -23,13 +24,17 @@ _predictor: HeatPredictor = DummyPredictor()
 # nanti: _predictor = RealPredictor("models/xgb_v1.joblib")
 # =====================================================
 
+_heat_intensity_provider: HeatIntensityProvider = (
+    DummyHeatIntensityProvider()
+)
 
 def get_predictor() -> HeatPredictor:
     return _predictor
 
+def get_heat_intensity_provider() -> HeatIntensityProvider:
+    return _heat_intensity_provider
 
 router = APIRouter(prefix="/v1")
-
 
 @app.get("/health", tags=["system"])
 def health(predictor: HeatPredictor = Depends(get_predictor)):
@@ -59,6 +64,41 @@ def predict(req: PredictRequest, predictor: HeatPredictor = Depends(get_predicto
         generated_at=datetime.now(timezone.utc),
     )
 
+@router.get("/heat-intensity/summary", response_model=HeatIntensitySummaryResponse, tags=["dashboard"],)
+def heat_intensity_summary(provider:HeatIntensityProvider = Depends(get_heat_intensity_provider),):
+    """
+    Mengembalikan ringkasan LST City-wide
+    untuk Surface Heat Intensity Index Dashboard.
+    """
+    result = provider.get_citywide_lst()
+
+    return HeatIntensitySummaryResponse(scope="CITY_WIDE", area_name="Kota Malang", lst_celsius=result.lst_celsius, 
+                                        
+        intensity_level=config.heat_intensity_level_from_lst(
+        result.lst_celsius
+        ),
+        
+        lower_threshold_celsius=(
+          config.HEAT_INTENSITY_LOWER_THRESHOLD_CELSIUS  
+        ),
+        
+        higher_threshold_celsius=(
+            config.HEAT_INTENSITY_HIGHER_THRESHOLD_CELSIUS
+        ),
+        
+        scale_min_celsius=(
+            config.HEAT_INTENSITY_SCALE_MIN_CELSIUS
+        ),
+        
+        scale_max_celsius=(
+            config.HEAT_INTENSITY_SCALE_MAX_CELSIUS
+        ),
+        
+        model_version=result.model_version,
+        source=result.source,
+        is_dummy=result.is_dummy,
+        generated_at=datetime.now(timezone.utc),
+    )
 
 @router.get("/hotspots", response_model=HotspotsResponse, tags=["areas"])
 def hotspots(predictor: HeatPredictor = Depends(get_predictor)):
