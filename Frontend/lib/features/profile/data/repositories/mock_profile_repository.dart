@@ -1,5 +1,7 @@
+import 'dart:typed_data';
 import '../../domain/entities/user_profile.dart';
 import '../../domain/repositories/profile_repository.dart';
+import '../../../../core/failures.dart';
 
 class MockProfileRepository implements ProfileRepository {
   const MockProfileRepository();
@@ -13,4 +15,29 @@ class MockProfileRepository implements ProfileRepository {
     ),
     failure: null,
   );
+
+  @override
+  Stream<UserProfile?> watchProfile() {
+    return Stream.value(getProfile().data);
+  }
+
+  @override
+  Future<ProfileResult> updateProfile({required String name, Uint8List? avatarBytes, String? avatarExtension, bool removeAvatar = false,}) async {
+    final currentProfile = getProfile().data;
+
+    if (currentProfile == null) {
+      return (data: null, failure: const UnexpectedFailure());
+    }
+
+    return (
+      data: UserProfile(
+        id: currentProfile.id,
+        name: name.trim(),
+        avatarUrl: currentProfile.avatarUrl,
+        role: currentProfile.role,
+        location: currentProfile.location,
+      ),
+      failure: null,
+    );
+  }
 }

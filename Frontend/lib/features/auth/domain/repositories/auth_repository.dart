@@ -12,6 +12,18 @@ abstract class AuthRepository {
 
   Future<AppUser> signIn({required String email, required String password});
 
+  Future<void> updatePassword({
+    required String currentPassword,
+    required String newPassword,
+  });
+
+  Future<void> sendPasswordRecoveryEmail({
+    required String email,
+    required String redirectTo,
+  });
+
+  Future<void> updatePasswordAfterRecovery({required String newPassword});
+
   Future<void> signOut();
 
   Future<AppUser?> getCurrentUser();

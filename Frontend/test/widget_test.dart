@@ -1,5 +1,7 @@
 import 'dart:async';
 
+import 'package:urbanheat_ai/features/urban_heat/domain/entities/prediction.dart';
+import 'package:urbanheat_ai/features/urban_heat/domain/repositories/prediction_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:urbanheat_ai/features/auth/domain/entities/app_user.dart';
@@ -8,13 +10,30 @@ import 'package:urbanheat_ai/app/app.dart';
 import 'package:urbanheat_ai/app/router.dart';
 import 'package:urbanheat_ai/features/auth/presentation/pages/login_page.dart';
 import 'package:urbanheat_ai/features/auth/presentation/pages/register_page.dart';
+import 'package:urbanheat_ai/features/profile/data/repositories/mock_profile_repository.dart';
+
+Finder findTimeBasedGreeting(String name) {
+  final greetingPattern = RegExp(
+    '^Good (morning|afternoon|evening|night), '
+    '${RegExp.escape(name)}\$',
+  );
+
+  return find.byWidgetPredicate(
+    (widget) => widget is Text && greetingPattern.hasMatch(widget.data ?? ''),
+    description: 'time-based greeting for $name',
+  );
+}
 
 void main() {
   testWidgets('UrbanHeat AI initial smoke and navigation test', (
     WidgetTester tester,
   ) async {
     final authRepository = _TestAuthRepository(authenticated: true);
-    final router = createAppRouter(authRepository: authRepository);
+    final router = createAppRouter(
+      authRepository: authRepository,
+      profileRepository: MockProfileRepository(),
+      predictionRepository: _FakePredictionRepository(),
+    );
     tester.view.physicalSize = const Size(400, 900);
     tester.view.devicePixelRatio = 1.0;
     addTearDown(() {
@@ -29,7 +48,7 @@ void main() {
     await tester.pumpAndSettle();
 
     // 1. Start the smoke flow at Home, where the navigation test begins.
-    expect(find.text('Good morning, Nasywa'), findsOneWidget);
+    expect(findTimeBasedGreeting('Nasywa'), findsOneWidget);
     expect(find.text('City-wide Heat\nOutlook (Kota\nMalang)'), findsOneWidget);
 
     // Scroll to and tap "Explore City Heatmap →" -> /heatmap
@@ -45,8 +64,8 @@ void main() {
     router.go('/heatmap/prediction');
     await tester.pumpAndSettle();
     expect(find.text('Prediction Result'), findsOneWidget);
-    expect(find.text('XGBoost Spatio-Temporal Regressor'), findsOneWidget);
-
+    expect(find.text('Model Architecture'), findsOneWidget);
+    expect(find.text('DummyPredictor'), findsOneWidget);
     // Scroll to and tap "View Detailed Analysis →" -> /hotspots/area/LW-A12/factors
     final viewDetailedFinder = find.text('View Detailed Analysis →');
     await tester.ensureVisible(viewDetailedFinder);
@@ -122,7 +141,10 @@ void main() {
     WidgetTester tester,
   ) async {
     final authRepository = _TestAuthRepository(authenticated: false);
-    final router = createAppRouter(authRepository: authRepository);
+    final router = createAppRouter(
+      authRepository: authRepository,
+      profileRepository: MockProfileRepository(),
+    );
     addTearDown(() {
       router.dispose();
       unawaited(authRepository.dispose());
@@ -140,7 +162,10 @@ void main() {
     WidgetTester tester,
   ) async {
     final authRepository = _TestAuthRepository(authenticated: false);
-    final router = createAppRouter(authRepository: authRepository);
+    final router = createAppRouter(
+      authRepository: authRepository,
+      profileRepository: MockProfileRepository(),
+    );
     addTearDown(() {
       router.dispose();
       unawaited(authRepository.dispose());
@@ -154,7 +179,7 @@ void main() {
     expect(authRepository.signUpName, 'Test User');
     expect(authRepository.signUpEmail, 'test@example.com');
     expect(authRepository.signUpPassword, 'password123');
-    expect(find.text('Good morning, Nasywa'), findsOneWidget);
+    expect(findTimeBasedGreeting('Nasywa'), findsOneWidget);
   });
 
   testWidgets('registration without a session remains unauthenticated', (
@@ -164,7 +189,10 @@ void main() {
       authenticated: false,
       signUpCreatesSession: false,
     );
-    final router = createAppRouter(authRepository: authRepository);
+    final router = createAppRouter(
+      authRepository: authRepository,
+      profileRepository: MockProfileRepository(),
+    );
     addTearDown(() {
       router.dispose();
       unawaited(authRepository.dispose());
@@ -183,7 +211,11 @@ void main() {
     WidgetTester tester,
   ) async {
     final authRepository = _TestAuthRepository(authenticated: false);
-    final router = createAppRouter(authRepository: authRepository);
+    final router = createAppRouter(
+      authRepository: authRepository,
+      profileRepository: MockProfileRepository(),
+      predictionRepository: _FakePredictionRepository(),
+    );
     addTearDown(() {
       router.dispose();
       unawaited(authRepository.dispose());
@@ -203,7 +235,10 @@ void main() {
     'authenticated users are redirected away from splash/onboarding',
     (WidgetTester tester) async {
       final authRepository = _TestAuthRepository(authenticated: true);
-      final router = createAppRouter(authRepository: authRepository);
+      final router = createAppRouter(
+        authRepository: authRepository,
+        profileRepository: MockProfileRepository(),
+      );
       addTearDown(() {
         router.dispose();
         unawaited(authRepository.dispose());
@@ -213,11 +248,19 @@ void main() {
       await tester.pumpWidget(UrbanHeatApp(router: router));
       await tester.pumpAndSettle();
 
-      expect(find.text('Good morning, Nasywa'), findsOneWidget);
+      expect(
+        find.byWidgetPredicate(
+          (widget) =>
+              widget is Text &&
+              RegExp(r'^Good (morning|afternoon|evening|night), Nasywa$')
+                  .hasMatch(widget.data ?? ''),
+        ),
+        findsOneWidget,
+      );
 
       router.go('/onboarding');
       await tester.pumpAndSettle();
-      expect(find.text('Good morning, Nasywa'), findsOneWidget);
+      expect(findTimeBasedGreeting('Nasywa'), findsOneWidget);
     },
   );
 
@@ -228,7 +271,10 @@ void main() {
       authenticated: false,
       signInError: StateError('sensitive test detail'),
     );
-    final router = createAppRouter(authRepository: authRepository);
+    final router = createAppRouter(
+      authRepository: authRepository,
+      profileRepository: MockProfileRepository(),
+    );
     addTearDown(() {
       router.dispose();
       unawaited(authRepository.dispose());
@@ -251,7 +297,10 @@ void main() {
       authenticated: false,
       signUpError: StateError('sensitive test detail'),
     );
-    final router = createAppRouter(authRepository: authRepository);
+    final router = createAppRouter(
+      authRepository: authRepository,
+      profileRepository: MockProfileRepository(),
+    );
     addTearDown(() {
       router.dispose();
       unawaited(authRepository.dispose());
@@ -338,6 +387,23 @@ class _TestAuthRepository implements AuthRepository {
   }
 
   @override
+  Future<void> updatePassword({
+    required String currentPassword,
+    required String newPassword,
+  }) async {}
+
+  @override
+  Future<void> sendPasswordRecoveryEmail({
+    required String email,
+    required String redirectTo,
+  }) async {}
+
+  @override
+  Future<void> updatePasswordAfterRecovery({
+    required String newPassword,
+  }) async {}
+
+  @override
   Future<void> signOut() async {
     _isAuthenticated = false;
     _authChanges.add(null);
@@ -361,4 +427,31 @@ class _TestAuthRepository implements AuthRepository {
   }
 
   Future<void> dispose() => _authChanges.close();
+}
+
+class _FakePredictionRepository implements PredictionRepository {
+  @override
+  Future<PredictionResult> predict({
+    required double latitude,
+    required double longitude,
+    required DateTime date,
+  }) async {
+    return (
+      data: Prediction(
+        latitude: latitude,
+        longitude: longitude,
+        date: date,
+        predictedLstCelsius: 34.8,
+        baseValueCelsius: 30.6,
+        riskLevel: 'ELEVATED',
+        factors: const [],
+        dimensions: const [],
+        mitigations: const [],
+        modelVersion: 'dummy-0.2',
+        isDummy: true,
+        generatedAt: DateTime.utc(2026, 11, 12),
+      ),
+      failure: null,
+    );
+  }
 }

@@ -4,6 +4,8 @@ import 'package:go_router/go_router.dart';
 import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/app_spacing.dart';
 import '../../../../app/theme/app_text_styles.dart';
+import '../../../profile/domain/entities/user_profile.dart';
+import '../../../profile/domain/repositories/profile_repository.dart';
 import '../../domain/entities/mitigation.dart';
 import '../../domain/repositories/urban_heat_repository.dart';
 import '../../../../shared/widgets/app_top_bar.dart';
@@ -14,11 +16,13 @@ import '../../../../shared/widgets/placeholder_image.dart';
 class MitigationPage extends StatefulWidget {
   final String gridId;
   final UrbanHeatRepository repository;
+  final ProfileRepository profileRepository;
 
   const MitigationPage({
     super.key,
     required this.gridId,
     required this.repository,
+    required this.profileRepository,
   });
 
   @override
@@ -26,6 +30,7 @@ class MitigationPage extends StatefulWidget {
 }
 
 class _MitigationPageState extends State<MitigationPage> {
+  late final Stream<UserProfile?> _profileStream;
   List<Mitigation> _mitigations = const [];
   bool _loading = true;
   bool _failed = false;
@@ -33,6 +38,8 @@ class _MitigationPageState extends State<MitigationPage> {
   @override
   void initState() {
     super.initState();
+    _profileStream = widget.profileRepository.watchProfile();
+
     _loadMitigations();
   }
 
@@ -57,7 +64,15 @@ class _MitigationPageState extends State<MitigationPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              const AppTopBar(),
+              StreamBuilder<UserProfile?>(
+                stream: _profileStream,
+                builder: (context, snapshot) {
+                  return AppTopBar(
+                    avatarUrl: snapshot.data?.avatarUrl,
+                    onProfileTap: () => context.go('/profile'),
+                  );
+                },
+              ),
               Padding(
                 padding: AppSpacing.screenPaddingH,
                 child: Column(

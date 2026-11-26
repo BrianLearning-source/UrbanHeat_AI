@@ -4,6 +4,13 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../core/config/api_config.dart';
+import '../core/network/api_client.dart';
+import '../features/urban_heat/data/repositories/api_prediction_repository.dart';
+import '../features/urban_heat/domain/repositories/prediction_repository.dart';
+import '../features/profile/data/repositories/supabase_profile_repository.dart';
+import '../features/auth/presentation/pages/forgot_password_page.dart';
+import '../features/auth/presentation/pages/reset_password_page.dart';
 import '../features/urban_heat/presentation/pages/heatmap_page.dart';
 import '../features/urban_heat/presentation/pages/prediction_result_page.dart';
 import '../features/urban_heat/presentation/pages/home_page.dart';
@@ -23,13 +30,15 @@ import '../features/onboarding/presentation/pages/splash_pages.dart';
 import '../features/onboarding/presentation/pages/onboarding_pages.dart';
 import '../features/onboarding/data/repositories/shared_preferences_onboarding_repository.dart';
 import '../features/onboarding/domain/repositories/onboarding_repository.dart';
-import '../features/profile/data/repositories/mock_profile_repository.dart';
 import '../features/profile/domain/repositories/profile_repository.dart';
 import '../features/urban_heat/data/repositories/mock_urban_heat_repository.dart';
 import '../features/urban_heat/domain/repositories/urban_heat_repository.dart';
 import '../shared/widgets/app_bottom_nav.dart';
 import '../features/auth/domain/repositories/auth_repository.dart';
 import '../features/auth/data/repositories/supabase_auth_repository.dart';
+import '../features/urban_heat/data/repositories/api_heat_intensity_repository.dart';
+import '../features/urban_heat/data/repositories/mock_heat_intensity_repository.dart';
+import '../features/urban_heat/domain/repositories/heat_intensity_repository.dart';
 
 final AuthRepository authRepository = SupabaseAuthRepository(
   Supabase.instance.client,
@@ -38,16 +47,34 @@ final AuthRepository authRepository = SupabaseAuthRepository(
 // Feature dependencies are constructed here and passed into pages.
 final UrbanHeatRepository urbanHeatFeatureRepository =
     const MockUrbanHeatRepository();
-final ProfileRepository profileRepository = const MockProfileRepository();
+// final ProfileRepository profileRepository = const MockProfileRepository();
+final ProfileRepository profileRepository = SupabaseProfileRepository(
+  Supabase.instance.client,
+);
 final OnboardingRepository onboardingRepository =
     const SharedPreferencesOnboardingRepository();
 
-final GoRouter appRouter = createAppRouter(authRepository: authRepository);
+final GoRouter appRouter = createAppRouter(
+  authRepository: authRepository,
+  profileRepository: profileRepository,
+    heatIntensityRepository: ApiHeatIntensityRepository(
+    ApiClient(baseUrl: ApiConfig.baseUrl),
+    ),
+);
 
-GoRouter createAppRouter({required AuthRepository authRepository}) {
+GoRouter createAppRouter({
+  required AuthRepository authRepository,
+  required ProfileRepository profileRepository,
+  PredictionRepository? predictionRepository,
+  HeatIntensityRepository? heatIntensityRepository,
+}) {
   final authRefreshListenable = _AuthStateRefreshListenable(
     authRepository.authStateChanges,
   );
+
+  final dashboardHeatIntensityRepository =
+    heatIntensityRepository ??
+    const MockHeatIntensityRepository();
 
   return GoRouter(
     refreshListenable: authRefreshListenable,
@@ -58,9 +85,14 @@ GoRouter createAppRouter({required AuthRepository authRepository}) {
         '/onboarding',
         '/login',
         '/register',
+        '/forgot-password',
       }.contains(location);
 
-      if (!authRepository.isAuthenticated && !isPublicRoute) {
+      final isRecoveryRoute = location == '/reset-password';
+
+      if (!authRepository.isAuthenticated &&
+          !isPublicRoute &&
+          !isRecoveryRoute) {
         return Uri(
           path: '/login',
           queryParameters: {'from': state.uri.toString()},
@@ -68,6 +100,14 @@ GoRouter createAppRouter({required AuthRepository authRepository}) {
       }
 
       if (authRepository.isAuthenticated && isPublicRoute) {
+        final redirectLocation = state.uri.queryParameters['from'];
+
+        if (location == '/login' &&
+            redirectLocation != null &&
+            redirectLocation.startsWith('/') &&
+            !redirectLocation.startsWith('//')) {
+          return redirectLocation;
+        }
         return '/home';
       }
 
@@ -99,21 +139,35 @@ GoRouter createAppRouter({required AuthRepository authRepository}) {
             RegisterScreen(authRepository: authRepository),
       ),
       GoRoute(
+        path: '/forgot-password',
+        builder: (context, state) => ForgotPasswordScreen(
+          authRepository: authRepository,
+          initialEmail: state.extra as String?,
+        ),
+      ),
+      GoRoute(
+        path: '/reset-password',
+        builder: (context, state) =>
+            ResetPasswordScreen(authRepository: authRepository),
+      ),
+      GoRoute(
         path: '/edit-profile',
         builder: (context, state) {
           final arguments = state.extra as EditProfileArguments?;
           return EditProfileScreen(
+            repository: profileRepository,
             initialName:
                 arguments?.name ??
                 profileRepository.getProfile().data?.name ??
                 'Nasywa',
-            initialPhotoPath: arguments?.photoPath,
+            initialAvatarUrl: arguments?.avatarUrl,
           );
         },
       ),
       GoRoute(
         path: '/change-password',
-        builder: (context, state) => const ChangePasswordScreen(),
+        builder: (context, state) =>
+            ChangePasswordScreen(authRepository: authRepository),
       ),
       GoRoute(
         path: '/notifications',
@@ -146,10 +200,8 @@ GoRouter createAppRouter({required AuthRepository authRepository}) {
             routes: [
               GoRoute(
                 path: '/home',
-                builder: (context, state) => HomePage(
-                  userName:
-                      profileRepository.getProfile().data?.name ?? 'Nasywa',
-                ),
+                builder: (context, state) =>
+                    HomePage(profileRepository: profileRepository, heatIntensityRepository: dashboardHeatIntensityRepository,),
               ),
             ],
           ),
@@ -158,11 +210,18 @@ GoRouter createAppRouter({required AuthRepository authRepository}) {
             routes: [
               GoRoute(
                 path: '/heatmap',
-                builder: (context, state) => const HeatmapPage(),
+                builder: (context, state) =>
+                    HeatmapPage(profileRepository: profileRepository),
                 routes: [
                   GoRoute(
                     path: 'prediction',
-                    builder: (context, state) => const PredictionResultPage(),
+                    builder: (context, state) => PredictionResultPage(
+                      profileRepository: profileRepository,
+                      predictionRepository: predictionRepository ??
+                        ApiPredictionRepository(
+                          ApiClient(baseUrl: ApiConfig.baseUrl),
+                        ),
+                    ),
                   ),
                 ],
               ),
@@ -173,8 +232,10 @@ GoRouter createAppRouter({required AuthRepository authRepository}) {
             routes: [
               GoRoute(
                 path: '/hotspots',
-                builder: (context, state) =>
-                    HotspotsPage(repository: urbanHeatFeatureRepository),
+                builder: (context, state) => HotspotsPage(
+                  repository: urbanHeatFeatureRepository,
+                  profileRepository: profileRepository,
+                ),
                 routes: [
                   GoRoute(
                     path: 'area/:gridId',
@@ -192,6 +253,7 @@ GoRouter createAppRouter({required AuthRepository authRepository}) {
                           return ContributingFactorsPage(
                             gridId: gridId,
                             repository: urbanHeatFeatureRepository,
+                            profileRepository: profileRepository,
                           );
                         },
                       ),
@@ -203,6 +265,7 @@ GoRouter createAppRouter({required AuthRepository authRepository}) {
                           return MitigationPage(
                             gridId: gridId,
                             repository: urbanHeatFeatureRepository,
+                            profileRepository: profileRepository,
                           );
                         },
                       ),

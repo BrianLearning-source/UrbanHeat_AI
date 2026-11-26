@@ -121,11 +121,16 @@ class _LoginScreenState extends State<LoginScreen>
     }
   }
 
+  // Memastikan tujuan navigasi merupakan route internal yang aman.
   String get _safeRedirectLocation {
     final location = widget.redirectLocation;
+
+    // Login biasa tanpa tujuan sebelumnya akan menuju Home.
     if (location == null) return '/home';
 
     final uri = Uri.tryParse(location);
+
+    // Tolak URL eksternal dan route publik yang tidak perlu dituju ulang.
     if (uri == null ||
         uri.hasScheme ||
         uri.hasAuthority ||
@@ -257,7 +262,11 @@ class _LoginScreenState extends State<LoginScreen>
                                               alignment: Alignment.centerRight,
                                               child: TextButton(
                                                 onPressed: () {
-                                                  // TODO: Add the password recovery flow.
+                                                  context.push(
+                                                    '/forgot-password',
+                                                    extra: _emailController.text
+                                                        .trim(),
+                                                  );
                                                 },
                                                 style: TextButton.styleFrom(
                                                   padding: EdgeInsets.zero,

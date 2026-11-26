@@ -8,17 +8,25 @@ import '../../domain/entities/hotspot.dart';
 import '../../domain/repositories/urban_heat_repository.dart';
 import '../../../../shared/widgets/app_top_bar.dart';
 import '../../../../shared/widgets/info_card.dart';
+import '../../../profile/domain/entities/user_profile.dart';
+import '../../../profile/domain/repositories/profile_repository.dart';
 
 class HotspotsPage extends StatefulWidget {
-  const HotspotsPage({super.key, required this.repository});
+  const HotspotsPage({
+    super.key,
+    required this.repository,
+    required this.profileRepository,
+  });
 
   final UrbanHeatRepository repository;
+  final ProfileRepository profileRepository;
 
   @override
   State<HotspotsPage> createState() => _HotspotsPageState();
 }
 
 class _HotspotsPageState extends State<HotspotsPage> {
+  late final Stream<UserProfile?> _profileStream;
   List<Hotspot> _hotspots = const [];
   bool _loading = true;
   bool _failed = false;
@@ -34,6 +42,7 @@ class _HotspotsPageState extends State<HotspotsPage> {
   @override
   void initState() {
     super.initState();
+    _profileStream = widget.profileRepository.watchProfile();
     _loadHotspots();
   }
 
@@ -58,7 +67,15 @@ class _HotspotsPageState extends State<HotspotsPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              AppTopBar(onProfileTap: () => context.go('/profile')),
+              StreamBuilder<UserProfile?>(
+                stream: _profileStream,
+                builder: (context, snapshot) {
+                  return AppTopBar(
+                    avatarUrl: snapshot.data?.avatarUrl,
+                    onProfileTap: () => context.go('/profile'),
+                  );
+                },
+              ),
               const SizedBox(height: AppSpacing.md),
               Padding(
                 padding: AppSpacing.screenPaddingH,

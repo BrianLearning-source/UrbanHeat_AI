@@ -8,7 +8,7 @@ import 'package:urbanheat_ai/features/urban_heat/domain/entities/shap_dimension.
 import 'package:urbanheat_ai/features/urban_heat/domain/entities/shap_factor.dart';
 import 'package:urbanheat_ai/features/urban_heat/domain/repositories/urban_heat_repository.dart';
 import 'package:urbanheat_ai/features/urban_heat/presentation/pages/hotspots_page.dart';
-
+import 'package:urbanheat_ai/features/profile/data/repositories/mock_profile_repository.dart';
 void main() {
   testWidgets('HotspotsPage renders entities from a successful repository', (
     tester,
@@ -32,7 +32,7 @@ void main() {
     );
 
     await tester.pumpWidget(
-      const MaterialApp(home: HotspotsPage(repository: repository)),
+      const MaterialApp(home: HotspotsPage(repository: repository, profileRepository: MockProfileRepository(),)),
     );
     await tester.pumpAndSettle();
 
@@ -46,7 +46,7 @@ void main() {
     );
 
     await tester.pumpWidget(
-      const MaterialApp(home: HotspotsPage(repository: repository)),
+      const MaterialApp(home: HotspotsPage(repository: repository, profileRepository: MockProfileRepository(),  )),
     );
     await tester.pumpAndSettle();
 

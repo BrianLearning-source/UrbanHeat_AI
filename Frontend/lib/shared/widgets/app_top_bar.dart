@@ -5,9 +5,11 @@ import '../../app/theme/app_spacing.dart';
 import '../../app/theme/app_text_styles.dart';
 
 class AppTopBar extends StatelessWidget {
-  const AppTopBar({super.key, this.onProfileTap});
+  const AppTopBar({super.key, this.onProfileTap, this.avatarUrl,});
 
   final VoidCallback? onProfileTap;
+
+  final String? avatarUrl;
 
   @override
   Widget build(BuildContext context) {
@@ -74,10 +76,30 @@ class AppTopBar extends StatelessWidget {
                   width: 1,
                 ),
               ),
-              child: const Icon(
-                Icons.person_rounded,
-                color: AppColors.primary,
-                size: AppSpacing.lg,
+              child: ClipOval(
+                child: avatarUrl == null || avatarUrl!.isEmpty
+                    ? const Icon(
+                        Icons.person_rounded,
+                        color: AppColors.primary,
+                        size: AppSpacing.lg,
+                    )
+                  : Image.network(
+                      avatarUrl!,
+                      width: AppSpacing.xl,
+                      height: AppSpacing.xl,
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) {
+                        return const Icon(
+                          Icons.person_rounded,
+                          color: AppColors.primary,
+                          size: AppSpacing.lg,
+                        );
+                      },
+                  ),
+              // child: const Icon(
+              //   Icons.person_rounded,
+              //   color: AppColors.primary,
+              //   size: AppSpacing.lg,
               ),
             ),
           ),
